@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model EstadoCivil {
+  id_estadoCivil      Int             @id @default(autoincrement())
+  descricao           String          @db.VarChar(50)
+  deletedAt           DateTime?
+  usuarios            Usuario[]       @relation("UsuarioEstadoCivil")
+}
+
+model Profissao {
+  id_profissao        Int             @id @default(autoincrement())
+  descricao           String          @db.VarChar(50)
+  deletedAt           DateTime?
+  usuarios            Usuario[]       @relation("UsuarioProfissao")
+}
+
+model Tipo_Usuario {
+  id_tipo_usuario     Int             @id @default(autoincrement())
+  descricao           String          @db.VarChar(50)
+  deletedAt           DateTime?
+  usuarios            Usuario[]       @relation("UsuarioTipo_Usuario")
+}
+
+model Usuario {
+  id_usuario          Int             @id @default(autoincrement())
+  id_estadoCivil      Int             @default(1) // Valor padrão, altere conforme necessário
+  id_profissao        Int             @default(1) // Valor padrão, altere conforme necessário
+  id_tipo_usuario     Int             @default(1) // Valor padrão, altere conforme necessário
+  nomeUsuario         String?         @db.VarChar(200)
+  senha_hash          String?         @db.VarChar(200)
+  email               String?         @db.VarChar(200)
+  nome_completo       String?         @db.VarChar(200)
+  foto_url_usuario    String[]        @db.VarChar(1000)
+  estado_civil        EstadoCivil     @relation("UsuarioEstadoCivil", fields: [id_estadoCivil], references: [id_estadoCivil], onDelete: Restrict)
+  profissao           Profissao       @relation("UsuarioProfissao", fields: [id_profissao], references: [id_profissao], onDelete: Restrict)
+  biografia           String          @db.VarChar(200) @default("")
+  data_nascimento     DateTime        @default(now()) 
+  contador_curtida    Int             @default(0)
+  latitude_usuario    Float           @default(0)
+  longitude_usuario   Float           @default(0)
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt 
+  deletedAt           DateTime? 
+  tipo_usuario        Tipo_Usuario    @relation("UsuarioTipo_Usuario", fields: [id_tipo_usuario], references: [id_tipo_usuario], onDelete: Restrict)
+
+  
+}
+
+model Pet {
+  id_pet              Int             @id @default(autoincrement())
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  deletedAt           DateTime?
+  nome_pet            String          @db.VarChar(50)
+}
+
+model Conversa {
+  id_conversa         Int             @id @default(autoincrement())
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime        @updatedAt
+  deletedAt           DateTime?
+  data_criacao        DateTime
+  
+}
