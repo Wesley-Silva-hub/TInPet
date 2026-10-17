@@ -1,9 +1,16 @@
 import { useQuery } from '@tanstack/react-query'
-import { type ArticleSummary, articleCategoryLabels, type Page, type Post } from '@tinpet/shared'
-import { Camera, Newspaper } from 'lucide-react'
+import {
+  type ArticleSummary,
+  articleCategoryLabels,
+  type Page,
+  type Post,
+  type VaccineReminder,
+} from '@tinpet/shared'
+import { Camera, Flame, Heart, Newspaper, Syringe } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { Link } from 'react-router'
 import { InfiniteSentinel } from '../../components/ui/InfiniteSentinel'
+import { PetAvatar } from '../../components/ui/PetAvatar'
 import { PostSkeleton } from '../../components/ui/Skeleton'
 import { EmptyState, ErrorState } from '../../components/ui/States'
 import { api } from '../../lib/api'
@@ -31,7 +38,9 @@ export function HomePage() {
         </Link>
       </header>
 
+      <VaccineReminders />
       {items.length > 0 && <PetHighlights posts={items} />}
+      <Trending />
       <NewsStrip />
 
       {posts.isPending && (
@@ -88,13 +97,15 @@ function PetHighlights({ posts }: { posts: Post[] }) {
             className="shrink-0"
           >
             <Link
-              to={`/posts/${post.id}`}
+              to={`/pets/${post.pet?.id}`}
               className="flex w-20 flex-col items-center gap-1.5 text-center"
             >
-              <span className="rounded-full bg-gradient-to-tr from-sun-400 via-brand-500 to-brand-700 p-[3px] transition hover:scale-105">
-                <span className="block rounded-full bg-canvas p-[3px]">
-                  <img src={post.imageUrl} alt="" className="size-16 rounded-full object-cover" />
-                </span>
+              <span className="transition hover:scale-105">
+                <PetAvatar
+                  petSrc={post.imageUrl}
+                  ownerSrc={post.author.avatarUrl}
+                  ownerName={post.author.name}
+                />
               </span>
               <span className="w-full truncate text-sm font-semibold">{post.pet?.name}</span>
             </Link>
@@ -146,6 +157,97 @@ function NewsStrip() {
                   {article.title}
                 </h3>
               </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** Reforços de vacina atrasados ou chegando (só aparece quando há algum). */
+function VaccineReminders() {
+  const reminders = useQuery({
+    queryKey: ['reminders'],
+    queryFn: () => api<VaccineReminder[]>('/me/vaccine-reminders'),
+    staleTime: 10 * 60_000,
+  })
+  if (!reminders.data?.length) return null
+
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      aria-labelledby="lembretes"
+      className="flex flex-col gap-2 rounded-card border border-sun-400/60 bg-sun-400/15 p-4"
+    >
+      <h2 id="lembretes" className="flex items-center gap-2 font-sans text-base font-bold">
+        <Syringe className="size-5 text-brand-600" aria-hidden /> Lembrete de vacina
+      </h2>
+      <ul className="flex flex-col gap-1">
+        {reminders.data.map((reminder) => (
+          <li key={reminder.vaccineId}>
+            <Link
+              to={`/pets/${reminder.petId}/editar`}
+              className="flex justify-between gap-3 hover:underline"
+            >
+              <span>
+                <b>{reminder.vaccineName}</b> de {reminder.petName}
+              </span>
+              <span
+                className={`shrink-0 font-semibold ${reminder.daysLeft < 0 ? 'text-red-700 dark:text-red-300' : ''}`}
+              >
+                {reminder.daysLeft < 0
+                  ? `atrasada há ${-reminder.daysLeft} ${-reminder.daysLeft === 1 ? 'dia' : 'dias'}`
+                  : reminder.daysLeft === 0
+                    ? 'vence hoje'
+                    : `em ${reminder.daysLeft} ${reminder.daysLeft === 1 ? 'dia' : 'dias'}`}
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </motion.section>
+  )
+}
+
+/** Mais curtidos da semana, em carrossel. */
+function Trending() {
+  const trending = useQuery({
+    // Chave fora de ['posts']: a curtida otimista só mexe nas listas paginadas
+    queryKey: ['trending-posts'],
+    queryFn: () => api<Post[]>('/posts/trending'),
+    staleTime: 5 * 60_000,
+  })
+  if (!trending.data?.length) return null
+
+  return (
+    <section aria-labelledby="em-alta" className="flex flex-col gap-3">
+      <h2 id="em-alta" className="flex items-center gap-2 text-xl font-semibold">
+        <Flame className="size-5 text-brand-500" aria-hidden /> Em alta na semana
+      </h2>
+      <ul className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2">
+        {trending.data.map((post, index) => (
+          <li key={post.id} className="w-36 shrink-0 snap-start">
+            <Link
+              to={`/posts/${post.id}`}
+              className="group relative block aspect-[3/4] overflow-hidden rounded-3xl bg-surface-2"
+            >
+              <img
+                src={post.imageUrl}
+                alt={post.caption.slice(0, 80) || `Publicação de ${post.author.name}`}
+                loading="lazy"
+                className="size-full object-cover transition duration-500 group-hover:scale-105"
+              />
+              <span className="absolute top-2 left-2 grid size-7 place-items-center rounded-full bg-black/55 text-sm font-bold text-white">
+                {index + 1}
+              </span>
+              <span className="absolute inset-x-0 bottom-0 flex items-center gap-1 bg-gradient-to-t from-black/75 to-transparent p-3 pt-8 text-sm font-semibold text-white">
+                <Heart className="size-4 fill-white" aria-hidden /> {post.likeCount}
+                <span className="ml-auto truncate">
+                  {post.pet?.name ?? post.author.name.split(' ')[0]}
+                </span>
+              </span>
             </Link>
           </li>
         ))}

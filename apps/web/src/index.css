@@ -1,5 +1,17 @@
 @import "tailwindcss";
 
+/* dark: segue a escolha do usuário ou, sem escolha, o sistema */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where(:root:not([data-theme="light"]) *, :root:not([data-theme="light"])) {
+      @slot;
+    }
+  }
+}
+
 /* Identidade TinPet: coral quente + creme, com tema escuro automático */
 @theme {
   --font-display: "Fredoka", ui-rounded, system-ui, sans-serif;
@@ -36,8 +48,19 @@
   color-scheme: light;
 }
 
+/* Tema escuro: escolhido pelo usuário (data-theme) ou, sem escolha, o do sistema */
+:root[data-theme="dark"] {
+  --canvas: #1a1220;
+  --surface: #251a2d;
+  --surface-2: #30233a;
+  --ink: #f8ecf0;
+  --muted: #b9a7bc;
+  --line: #3e3048;
+  color-scheme: dark;
+}
+
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --canvas: #1a1220;
     --surface: #251a2d;
     --surface-2: #30233a;

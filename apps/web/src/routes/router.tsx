@@ -114,6 +114,20 @@ export const router = createBrowserRouter([
                     lazy: page(() => import('../features/profile/PetFormPage'), 'PetFormPage'),
                   },
                   {
+                    path: '/pets/:id',
+                    lazy: page(
+                      () => import('../features/profile/PetProfilePage'),
+                      'PetProfilePage',
+                    ),
+                  },
+                  {
+                    path: '/notificacoes',
+                    lazy: page(
+                      () => import('../features/notifications/NotificationsPage'),
+                      'NotificationsPage',
+                    ),
+                  },
+                  {
                     path: '/pets/:id/editar',
                     lazy: page(() => import('../features/profile/PetFormPage'), 'PetFormPage'),
                   },

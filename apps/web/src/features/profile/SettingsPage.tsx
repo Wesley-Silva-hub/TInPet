@@ -7,6 +7,7 @@ import { Field } from '../../components/ui/Field'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { api, apiBlob, applySession, errorMessage } from '../../lib/api'
 import { useAuth, useMe } from '../../lib/auth'
+import { AppearanceCard } from './AppearanceCard'
 import { LocationCard } from './LocationCard'
 
 /** Conta e privacidade (LGPD): sair, exportar dados e excluir a conta. */
@@ -68,6 +69,8 @@ export function SettingsPage() {
           <LogOut className="size-4" aria-hidden /> Sair
         </Button>
       </section>
+
+      <AppearanceCard />
 
       {me.role === 'OWNER' && <LocationCard />}
 

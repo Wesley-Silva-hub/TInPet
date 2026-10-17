@@ -3,11 +3,11 @@ import { motion, useReducedMotion } from 'motion/react'
 import { Link } from 'react-router'
 import { InfiniteSentinel } from '../../components/ui/InfiniteSentinel'
 import { Skeleton } from '../../components/ui/Skeleton'
-import { usePosts } from './queries'
+import { type PostsFilter, usePosts } from './queries'
 
 /** Grade de fotos do perfil, com curtidas e comentários ao passar o mouse. */
-export function PostGrid({ authorId, emptyText }: { authorId: string; emptyText: string }) {
-  const posts = usePosts(authorId)
+export function PostGrid({ emptyText, ...filter }: PostsFilter & { emptyText: string }) {
+  const posts = usePosts(filter)
   const reduceMotion = useReducedMotion()
   const items = posts.data?.pages.flatMap((page) => page.items) ?? []
 

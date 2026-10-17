@@ -75,8 +75,14 @@ export function PostCard({ post, priority = false }: { post: Post; priority?: bo
           <p className="truncate text-sm text-muted">
             {post.pet && (
               <>
-                com <b className="font-semibold text-ink">{post.pet.name}</b> ·{' '}
-                {speciesLabels[post.pet.species]}
+                com{' '}
+                <Link
+                  to={`/pets/${post.pet.id}`}
+                  className="font-semibold text-ink hover:underline"
+                >
+                  {post.pet.name}
+                </Link>{' '}
+                · {speciesLabels[post.pet.species]}
               </>
             )}
             {post.pet && post.author.city && ' · '}

@@ -3,6 +3,7 @@ import type { Message, Page } from '@tinpet/shared'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
+import { notificationsKey, unreadKey } from '../features/notifications/queries'
 import { connectSocket, disconnectSocket } from '../lib/socket'
 
 export const matchesKey = ['matches'] as const
@@ -35,6 +36,13 @@ export function useRealtime(enabled: boolean) {
         },
       )
       queryClient.invalidateQueries({ queryKey: matchesKey })
+    })
+
+    socket.on('notification:new', () => {
+      queryClient.setQueryData<{ unread: number }>(unreadKey, (data) => ({
+        unread: (data?.unread ?? 0) + 1,
+      }))
+      queryClient.invalidateQueries({ queryKey: notificationsKey })
     })
 
     socket.on('message:read', ({ matchId }) => {

@@ -178,14 +178,37 @@ async function main() {
     await db.postLike.createMany({
       data: likers.map((userId) => ({ postId: post.id, userId, createdAt: post.createdAt })),
     })
+    // Avisos ao autor (os da última semana chegam como não lidos)
+    const recent = now - post.createdAt.getTime() < 7 * DAY_MS
+    await db.notification.createMany({
+      data: likers.map((actorId) => ({
+        userId: post.authorId,
+        actorId,
+        type: 'POST_LIKE' as const,
+        postId: post.id,
+        createdAt: post.createdAt,
+        readAt: recent ? null : post.createdAt,
+      })),
+    })
     const commentCount = Math.floor(random() * 4)
     for (let i = 0; i < commentCount; i++) {
-      await db.postComment.create({
+      const comment = await db.postComment.create({
         data: {
           postId: post.id,
           authorId: pick(others),
           content: pick(commentPool),
           createdAt: new Date(post.createdAt.getTime() + (i + 1) * 37 * 60 * 1000),
+        },
+      })
+      await db.notification.create({
+        data: {
+          userId: post.authorId,
+          actorId: comment.authorId,
+          type: 'POST_COMMENT',
+          postId: post.id,
+          preview: comment.content,
+          createdAt: comment.createdAt,
+          readAt: recent ? null : comment.createdAt,
         },
       })
     }
@@ -223,6 +246,35 @@ async function main() {
           createdAt: new Date(now - DAY_MS + index * 15 * 60 * 1000),
           readAt: index < conversation.length - 1 ? new Date() : null,
         },
+      })
+    }
+  }
+
+  // Carteiras de vacinação: em dia para a maioria; o Bento tem reforço chegando (vira lembrete)
+  const daysFromNow = (days: number) => new Date(now + days * DAY_MS)
+  for (const owner of owners) {
+    for (const pet of owner.pets) {
+      const petId = petIds.get(pet.key) as string
+      const isDog = pet.species === 'DOG'
+      const isCat = pet.species === 'CAT'
+      if (!isDog && !isCat) continue
+      await db.petVaccine.createMany({
+        data: [
+          {
+            petId,
+            name: 'Antirrábica',
+            appliedAt: daysFromNow(-120),
+            nextDueAt: daysFromNow(245),
+            clinic: 'Clínica Veterinária Bem-Estar',
+          },
+          {
+            petId,
+            name: isDog ? 'V10 (polivalente canina)' : 'V4 (polivalente felina)',
+            appliedAt: daysFromNow(pet.key === 'bento' ? -356 : -60),
+            nextDueAt: daysFromNow(pet.key === 'bento' ? 9 : 305),
+            clinic: 'Clínica Veterinária Bem-Estar',
+          },
+        ],
       })
     }
   }
