@@ -14,11 +14,11 @@ export const productCategorySchema = z.enum(productCategories)
 export type ProductCategory = z.infer<typeof productCategorySchema>
 
 export const productCategoryLabels: Record<ProductCategory, string> = {
-  FOOD: 'Ração e petiscos',
+  FOOD: 'Rações e alimentos',
   ACCESSORIES: 'Acessórios',
   TOYS: 'Brinquedos',
-  HYGIENE: 'Higiene',
-  HEALTH: 'Saúde',
+  HYGIENE: 'Higiene e cuidados',
+  HEALTH: 'Saúde e medicamentos',
   SERVICES: 'Serviços',
   OTHER: 'Outros',
 }

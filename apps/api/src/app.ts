@@ -20,9 +20,11 @@ import { authRoutes } from './modules/auth/routes'
 import { chatRoutes } from './modules/chat/routes'
 import { registerChatSocket } from './modules/chat/socket'
 import { matchingRoutes } from './modules/matching/routes'
+import { newsRoutes } from './modules/news/routes'
 import { petRoutes } from './modules/pets/routes'
 import { productRoutes } from './modules/products/routes'
 import { safetyRoutes } from './modules/safety/routes'
+import { socialRoutes } from './modules/social/routes'
 import { userRoutes } from './modules/users/routes'
 import { TokenService } from './shared/auth'
 import { type AppDeps, registerAuthentication } from './shared/context'
@@ -142,6 +144,8 @@ export async function buildApp({ env, db, storage }: BuildAppOptions) {
       await api.register(chatRoutes)
       await api.register(safetyRoutes)
       await api.register(productRoutes, { prefix: '/products' })
+      await api.register(socialRoutes)
+      await api.register(newsRoutes)
     },
     { prefix: '/api/v1' },
   )
