@@ -55,9 +55,26 @@ export const router = createBrowserRouter([
             path: '/configuracoes',
             lazy: page(() => import('../features/profile/SettingsPage'), 'SettingsPage'),
           },
+          { path: '/noticias', lazy: page(() => import('../features/news/NewsPage'), 'NewsPage') },
+          {
+            path: '/noticias/:slug',
+            lazy: page(() => import('../features/news/ArticlePage'), 'ArticlePage'),
+          },
           {
             element: <RequireAuth roles={['OWNER']} />,
             children: [
+              {
+                path: '/inicio',
+                lazy: page(() => import('../features/social/HomePage'), 'HomePage'),
+              },
+              {
+                path: '/publicar',
+                lazy: page(() => import('../features/social/NewPostPage'), 'NewPostPage'),
+              },
+              {
+                path: '/posts/:id',
+                lazy: page(() => import('../features/social/PostPage'), 'PostPage'),
+              },
               {
                 path: '/onboarding',
                 lazy: page(() => import('../features/profile/OnboardingPage'), 'OnboardingPage'),

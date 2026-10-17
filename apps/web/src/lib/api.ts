@@ -49,6 +49,8 @@ interface RequestOptions {
   body?: unknown
   /** Envia multipart (upload de imagem). */
   file?: Blob
+  /** Campos de texto do multipart; vão antes do arquivo, como a API espera. */
+  fields?: Record<string, string | null | undefined>
   query?: Record<string, string | number | undefined | null>
 }
 
@@ -67,6 +69,9 @@ async function send(path: string, options: RequestOptions) {
   let body: BodyInit | undefined
   if (options.file) {
     const form = new FormData()
+    for (const [name, value] of Object.entries(options.fields ?? {})) {
+      if (value) form.append(name, value)
+    }
     form.append('file', options.file, 'imagem.jpg')
     body = form
   } else if (options.body !== undefined) {

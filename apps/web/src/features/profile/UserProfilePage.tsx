@@ -16,6 +16,7 @@ import { Button } from '../../components/ui/Button'
 import { Field } from '../../components/ui/Field'
 import { ErrorState, LoadingState } from '../../components/ui/States'
 import { api, errorMessage } from '../../lib/api'
+import { PostGrid } from '../social/PostGrid'
 
 export function UserProfilePage() {
   const { id } = useParams() as { id: string }
@@ -67,6 +68,13 @@ export function UserProfilePage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section aria-labelledby="fotos-do-tutor" className="flex flex-col gap-3">
+        <h2 id="fotos-do-tutor" className="text-lg font-semibold">
+          Publicações
+        </h2>
+        <PostGrid authorId={user.id} emptyText="Ainda sem publicações." />
       </section>
 
       <SafetyActions user={user} />
