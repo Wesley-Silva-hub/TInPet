@@ -5,7 +5,8 @@
   "type": "module",
   "files": [
     "dist",
-    "prisma",
+    "prisma/schema.prisma",
+    "prisma/migrations",
     "prisma.config.ts"
   ],
   "scripts": {
