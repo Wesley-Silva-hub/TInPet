@@ -5,6 +5,8 @@ import {
   productCategories,
   productCategoryLabels,
   productInputSchema,
+  type Species,
+  speciesLabels,
 } from '@tinpet/shared'
 import { ImagePlus } from 'lucide-react'
 import { type InputHTMLAttributes, useRef, useState } from 'react'
@@ -17,7 +19,7 @@ import { PageHeader } from '../../components/ui/PageHeader'
 import { ErrorState, LoadingState } from '../../components/ui/States'
 import { api, errorMessage } from '../../lib/api'
 import { ACCEPTED_IMAGES, compressImage } from '../../lib/image'
-import { ProductImage } from './MarketplacePage'
+import { ProductImage } from './ProductTile'
 
 /** "1.249,90" → 124990 centavos (NaN se inválido, a validação acusa). */
 export function parsePriceToCents(value: string): number {
@@ -28,6 +30,8 @@ export function parsePriceToCents(value: string): number {
   if (normalized === '') return Number.NaN
   return Math.round(Number(normalized) * 100)
 }
+
+const productSpecies: Species[] = ['DOG', 'CAT', 'BIRD', 'RABBIT', 'RODENT', 'OTHER']
 
 const centsToInput = (cents: number) => (cents / 100).toFixed(2).replace('.', ',')
 
@@ -83,6 +87,7 @@ function ProductForm({ product }: { product: Product | undefined }) {
       category: product?.category ?? 'FOOD',
       externalLink: product?.externalLink ?? null,
       isActive: product?.isActive ?? true,
+      species: product?.species ?? [],
     },
   })
   const { errors, isSubmitting } = form.formState
@@ -189,6 +194,44 @@ function ProductForm({ product }: { product: Product | undefined }) {
             )}
           </Field>
         </div>
+        <Controller
+          control={form.control}
+          name="species"
+          render={({ field }) => {
+            const selected = field.value ?? []
+            const toggle = (value: Species) =>
+              field.onChange(
+                selected.includes(value)
+                  ? selected.filter((item) => item !== value)
+                  : [...selected, value],
+              )
+            return (
+              <fieldset className="flex flex-col gap-2">
+                <legend className="mb-1 font-semibold">Para quais pets?</legend>
+                <div className="flex flex-wrap gap-2">
+                  {productSpecies.map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={selected.includes(value)}
+                      onClick={() => toggle(value)}
+                      className={`rounded-full border-2 px-4 py-1.5 text-sm font-semibold transition ${
+                        selected.includes(value)
+                          ? 'border-brand-500 bg-brand-50 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300'
+                          : 'border-line bg-surface'
+                      }`}
+                    >
+                      {speciesLabels[value]}
+                    </button>
+                  ))}
+                </div>
+                <span className="text-sm text-muted">
+                  Nenhum marcado = serve para todos. Usamos isso para recomendar ao tutor certo.
+                </span>
+              </fieldset>
+            )
+          }}
+        />
         <Field label="Descrição" error={errors.description?.message}>
           {(props) => (
             <textarea rows={5} maxLength={2000} {...props} {...form.register('description')} />

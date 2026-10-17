@@ -36,6 +36,17 @@
   --color-line: var(--line);
 
   --radius-card: 1.5rem;
+
+  --animate-shine: shine 2.4s ease-in-out infinite;
+  @keyframes shine {
+    0%,
+    60% {
+      transform: translateX(0) skewX(-20deg);
+    }
+    100% {
+      transform: translateX(450%) skewX(-20deg);
+    }
+  }
 }
 
 :root {
