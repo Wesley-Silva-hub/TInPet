@@ -42,7 +42,7 @@ desktop.ini
 /backups/
 
 # --- Deploy ---
-.vercel/
+.netlify/
 .turbo/
 
 # --- Claude Code (configuração pessoal) ---

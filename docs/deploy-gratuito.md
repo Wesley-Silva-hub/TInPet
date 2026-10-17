@@ -1,11 +1,11 @@
-# Deploy gratuito: Supabase + Render + Vercel
+# Deploy gratuito: Supabase + Render + Netlify
 
 ```
-Navegador ──► Vercel (front estático) ──rewrite /api/*──► Render (API Docker) ──► Supabase (Postgres + Storage)
+Navegador ──► Netlify (front estático) ──proxy /api/*──► Render (API Docker) ──► Supabase (Postgres + Storage)
           └──────────── WebSocket direto ───────────────►
 ```
 
-Ordem: **Supabase → Render → Vercel → ajustes finais**. Quem tiver acesso às contas faz os passos marcados com 👤; o resto já está no repositório.
+Ordem: **Supabase → Render → Netlify → ajustes finais**. Quem tiver acesso às contas faz os passos marcados com 👤; o resto já está no repositório.
 
 ## Limites dos planos grátis (conferidos em 2026-10-17)
 
@@ -13,12 +13,13 @@ Ordem: **Supabase → Render → Vercel → ajustes finais**. Quem tiver acesso 
 |---|---|
 | **Supabase Free** ([pricing](https://supabase.com/pricing)) | 500 MB de banco, 1 GB de storage, 5 GB de egress, upload de até 50 MB, 2 projetos ativos. **Pausa após 7 dias sem atividade** e **não tem backup automático**. |
 | **Render Free** ([docs](https://render.com/docs/free)) | **Hiberna após 15 min sem tráfego** e leva cerca de 1 min para acordar (inclusive conexões WebSocket). 750 horas de instância por mês. |
-| **Vercel Hobby** ([limits](https://vercel.com/docs/limits)) | Uso **não comercial**. Rewrites para origem externa têm timeout de 120 s e **não encaminham WebSocket**. Só conecta a repositórios de contas pessoais (não de organizações do GitHub). |
+| **Netlify Free** ([créditos](https://docs.netlify.com/manage/accounts-and-billing/billing/billing-for-credit-based-plans/how-credits-work/)) | 300 créditos/mês: **cada deploy de produção gasta 15** (≈20 por mês), banda 20 créditos/GB, 2 créditos a cada 10 mil requisições. Deploy previews de PR não gastam. **Se os créditos acabarem, o site sai do ar até o mês seguinte.** O proxy para a API corta requisições em **26 s**. |
 
 Consequências práticas:
 - A primeira requisição depois de um tempo parado fica lenta (Render acordando). Um monitor de uptime gratuito chamando `/api/v1/health` a cada 10 min mantém a API acordada e também gera atividade no banco, evitando a pausa do Supabase. Isso gasta as 750 h do mês (dá para um serviço 24/7).
 - **Faça backup manual do banco** (passo 5): o plano grátis não tem.
-- Se o projeto virar comercial, a Vercel exige o plano Pro (ou use Cloudflare Pages).
+- O `netlify.toml` pula o build quando o front não mudou (mudanças só na API não gastam créditos). Mesmo assim, junte vários PRs antes de publicar se o mês estiver apertado: o consumo aparece em *Team settings → Usage*.
+- Com o Render dormindo, a primeira chamada pelo proxy do Netlify pode estourar os 26 s: é mais um motivo para o monitor de uptime.
 
 ## 1. Supabase 👤
 
@@ -44,21 +45,22 @@ Consequências práticas:
 | `DIRECT_URL` | a mesma string |
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_SERVICE_KEY` | secret key |
-| `CORS_ORIGINS` | URL da Vercel, ex.: `https://tinpet.vercel.app` (preencha depois do passo 3) |
+| `CORS_ORIGINS` | URL do Netlify, ex.: `https://tinpet.netlify.app` (preencha depois do passo 3) |
 
 4. O deploy aplica as migrations (`prisma migrate deploy`) antes de subir a API. Confira `https://<servico>.onrender.com/api/v1/health` → `{"status":"ok"}`.
 5. (Opcional) Dados de demonstração: rode localmente apontando para o Supabase: `DATABASE_URL="<session pooler>" STORAGE_DRIVER=supabase SUPABASE_URL=... SUPABASE_SERVICE_KEY=... pnpm db:seed`. Não faça isso com usuários reais na base: o seed apaga as contas `@tinpet.dev`.
 
-## 3. Vercel (web) 👤
+## 3. Netlify (web) 👤
 
-1. Edite [`apps/web/vercel.json`](../apps/web/vercel.json) trocando `tinpet-api.onrender.com` pela URL real do serviço no Render e faça commit (PR).
-2. https://vercel.com/new → importe o repositório:
-   - **Root Directory:** `apps/web` (a Vercel detecta Vite e o pnpm workspace)
-   - **Environment Variable:** `VITE_SOCKET_URL=https://<servico>.onrender.com`
-3. Deploy. Previews são criados automaticamente para cada PR.
-4. Volte ao Render e ajuste `CORS_ORIGINS` com a URL final da Vercel (separe várias por vírgula se usar domínio próprio). Isso libera o WebSocket, que conecta direto no Render.
+1. Edite o [`netlify.toml`](../netlify.toml) trocando `tinpet-api.onrender.com` pela URL real do serviço no Render e faça commit (PR).
+2. https://app.netlify.com → **Add new project → Import an existing project → GitHub** → autorize e escolha `Wesley-Silva-hub/TInPet`.
+   - **Branch to deploy:** `main`
+   - Deixe *Base directory* em branco: build, pasta publicada e proxy já vêm do `netlify.toml` na raiz.
+3. Em **Environment variables**, adicione `VITE_SOCKET_URL=https://<servico>.onrender.com` e dispare um novo deploy (*Deploys → Trigger deploy*).
+4. (Opcional) *Site configuration → Change site name* para algo como `tinpet` → `https://tinpet.netlify.app`.
+5. Volte ao Render e ajuste `CORS_ORIGINS` com a URL final do Netlify (separe várias por vírgula se usar domínio próprio). Isso libera o WebSocket, que conecta direto no Render.
 
-O front chama `/api/*` na própria Vercel, que repassa ao Render: para o navegador é a mesma origem, e o cookie de sessão funciona sem configuração extra.
+O front chama `/api/*` no próprio Netlify, que repassa ao Render: para o navegador é a mesma origem, e o cookie de sessão funciona sem configuração extra. Cada PR ganha um *Deploy Preview* com link próprio (sem gastar créditos).
 
 ## 4. Verificação
 
@@ -82,6 +84,8 @@ Guarde os arquivos fora do repositório (eles contêm dados pessoais).
 |---|---|
 | Primeira requisição demora ~1 min | Render acordando; normal no plano grátis |
 | API não sobe: "Variáveis de ambiente inválidas" | Faltou variável; o log lista quais |
-| Chat não atualiza em tempo real | `VITE_SOCKET_URL` ausente na Vercel ou origem fora de `CORS_ORIGINS` |
+| Chat não atualiza em tempo real | `VITE_SOCKET_URL` ausente no Netlify ou origem fora de `CORS_ORIGINS` |
+| Erro 502/504 no login logo após um tempo parado | Render acordando (mais de 26 s); tente de novo em 1 min e configure o monitor de uptime |
+| "Site not available" no Netlify | Créditos do mês acabaram; volta no próximo ciclo |
 | Fotos não aparecem | Bucket `tinpet` não está público |
 | `prepared statement already exists` | Usou a porta 6543 (modo transação); use o session pooler (5432) |

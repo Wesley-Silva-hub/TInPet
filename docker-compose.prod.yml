@@ -51,7 +51,7 @@ services:
       - "443:443/udp"
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      # Build do front (opção "front na VPS"); vazio se o front ficar na Vercel
+      # Build do front (opção "front na VPS"); vazio se o front ficar no Netlify
       - ./apps/web/dist:/srv/web:ro
       - caddy_data:/data
       - caddy_config:/config
