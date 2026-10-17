@@ -1,5 +1,5 @@
 # Build context: raiz do monorepo (docker build -f apps/api/Dockerfile .)
-FROM node:22.23-alpine AS base
+FROM node:26.11-alpine AS base
 RUN corepack enable
 WORKDIR /repo
 
@@ -15,7 +15,7 @@ COPY apps/api apps/api
 RUN pnpm --filter @tinpet/api build \
   && pnpm --filter @tinpet/api deploy --prod --legacy /out
 
-FROM node:22.23-alpine AS runtime
+FROM node:26.11-alpine AS runtime
 ENV NODE_ENV=production PORT=3333
 WORKDIR /app
 COPY --from=build --chown=node:node /out ./
