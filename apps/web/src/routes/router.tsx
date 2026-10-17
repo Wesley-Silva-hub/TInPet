@@ -60,6 +60,14 @@ export const router = createBrowserRouter([
                 lazy: page(() => import('../features/marketplace/ProductPage'), 'ProductPage'),
               },
               {
+                path: '/lojas',
+                lazy: page(() => import('../features/marketplace/StoresPage'), 'StoresPage'),
+              },
+              {
+                path: '/lojas/:id',
+                lazy: page(() => import('../features/marketplace/StorePage'), 'StorePage'),
+              },
+              {
                 path: '/configuracoes',
                 lazy: page(() => import('../features/profile/SettingsPage'), 'SettingsPage'),
               },
@@ -148,6 +156,20 @@ export const router = createBrowserRouter([
                     lazy: page(
                       () => import('../features/marketplace/CompanyDashboardPage'),
                       'CompanyDashboardPage',
+                    ),
+                  },
+                  {
+                    path: '/empresa/impulsionar',
+                    lazy: page(
+                      () => import('../features/marketplace/BoostWizardPage'),
+                      'BoostWizardPage',
+                    ),
+                  },
+                  {
+                    path: '/empresa/perfil',
+                    lazy: page(
+                      () => import('../features/marketplace/StoreProfilePage'),
+                      'StoreProfilePage',
                     ),
                   },
                   {

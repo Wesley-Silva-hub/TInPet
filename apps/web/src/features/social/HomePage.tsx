@@ -8,6 +8,7 @@ import {
 } from '@tinpet/shared'
 import { Camera, Flame, Heart, Newspaper, Syringe } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
+import { Fragment } from 'react'
 import { Link } from 'react-router'
 import { InfiniteSentinel } from '../../components/ui/InfiniteSentinel'
 import { PetAvatar } from '../../components/ui/PetAvatar'
@@ -15,13 +16,18 @@ import { PostSkeleton } from '../../components/ui/Skeleton'
 import { EmptyState, ErrorState } from '../../components/ui/States'
 import { api } from '../../lib/api'
 import { useMe } from '../../lib/auth'
+import { useOffers } from '../marketplace/offers'
+import { SponsoredCard } from '../marketplace/SponsoredCard'
 import { PostCard } from './PostCard'
 import { usePosts } from './queries'
+
+const AD_EVERY = 4
 
 export function HomePage() {
   const me = useMe()
   const posts = usePosts()
   const items = posts.data?.pages.flatMap((page) => page.items) ?? []
+  const offers = useOffers().data ?? []
 
   return (
     <div className="mx-auto flex max-w-xl flex-col gap-6">
@@ -58,9 +64,20 @@ export function HomePage() {
         </EmptyState>
       )}
       <div className="flex flex-col gap-6">
-        {items.map((post, index) => (
-          <PostCard key={post.id} post={post} priority={index < 2} />
-        ))}
+        {items.map((post, index) => {
+          // Um anúncio a cada AD_EVERY posts, em rodízio entre as ofertas do tutor
+          const slot = (index + 1) / AD_EVERY
+          const ad =
+            Number.isInteger(slot) && offers.length > 0
+              ? offers[(slot - 1) % offers.length]
+              : undefined
+          return (
+            <Fragment key={post.id}>
+              <PostCard post={post} priority={index < 2} />
+              {ad && <SponsoredCard offer={ad} />}
+            </Fragment>
+          )
+        })}
       </div>
       <InfiniteSentinel
         hasMore={Boolean(posts.hasNextPage)}

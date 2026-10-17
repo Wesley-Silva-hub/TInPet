@@ -10,6 +10,7 @@ import {
   ShoppingBag,
   Store,
   UserRound,
+  Zap,
 } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
@@ -38,7 +39,8 @@ const ownerExtras: NavItem[] = [
 ]
 
 const companyTabs: NavItem[] = [
-  { to: '/empresa', label: 'Meus produtos', icon: Store },
+  { to: '/empresa', label: 'Painel', icon: Store },
+  { to: '/empresa/impulsionar', label: 'Impulsionar', icon: Zap },
   { to: '/loja', label: 'Vitrine', icon: ShoppingBag },
   { to: '/noticias', label: 'Notícias', icon: Newspaper },
   { to: '/configuracoes', label: 'Conta', icon: Settings },
@@ -113,7 +115,7 @@ export function AppLayout() {
           </Link>
           <nav aria-label="Principal" className="hidden gap-1 lg:flex">
             {desktopNav.map(({ to, label, icon: Icon }) => (
-              <NavLink key={to} to={to} className={desktopClass}>
+              <NavLink key={to} to={to} end={to === '/empresa'} className={desktopClass}>
                 <Icon className="size-5" aria-hidden />
                 {label}
               </NavLink>
@@ -147,7 +149,7 @@ export function AppLayout() {
       >
         <div className="mx-auto flex max-w-md justify-around py-1.5">
           {tabs.map(({ to, label, icon: Icon }) => (
-            <NavLink key={to} to={to} className={tabClass}>
+            <NavLink key={to} to={to} end={to === '/empresa'} className={tabClass}>
               {({ isActive }) => (
                 <>
                   {isActive && (
