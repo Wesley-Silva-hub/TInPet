@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+/* Identidade TinPet: coral quente + creme, com tema escuro automático */
+@theme {
+  --font-display: "Fredoka", ui-rounded, system-ui, sans-serif;
+  --font-sans: "Nunito Sans", system-ui, sans-serif;
+
+  --color-brand-50: #fff4f1;
+  --color-brand-100: #ffe3dc;
+  --color-brand-200: #ffc3b5;
+  --color-brand-400: #f7826f;
+  --color-brand-500: #ef5b4c;
+  --color-brand-600: #d9402f;
+  --color-brand-700: #b32f22;
+
+  --color-leaf-500: #2fb383;
+  --color-sun-400: #fbbf24;
+
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-canvas: var(--canvas);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+
+  --radius-card: 1.5rem;
+}
+
+:root {
+  --canvas: #fff8f0;
+  --surface: #ffffff;
+  --surface-2: #fdf0e6;
+  --ink: #2b1d2e;
+  --muted: #6e5d70;
+  --line: #eadbd2;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #1a1220;
+    --surface: #251a2d;
+    --surface-2: #30233a;
+    --ink: #f8ecf0;
+    --muted: #b9a7bc;
+    --line: #3e3048;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+  :focus-visible {
+    @apply outline-3 outline-offset-2 outline-brand-400;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: precisa vencer estilos inline de animação */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: precisa vencer estilos inline de animação */
+    transition-duration: 0.01ms !important;
+  }
+}
