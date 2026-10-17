@@ -1,0 +1,11 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Pacotes autorizados a rodar scripts de instalação (pnpm bloqueia os demais por segurança)
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - argon2
+  - esbuild
+  - lefthook
+  - prisma

@@ -1,0 +1,32 @@
+{
+  "name": "tinpet",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.7",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter \"./apps/*\" dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "pnpm -r typecheck",
+    "db:migrate": "pnpm --filter @tinpet/api db:migrate",
+    "db:seed": "pnpm --filter @tinpet/api db:seed",
+    "db:studio": "pnpm --filter @tinpet/api db:studio"
+  },
+  "commitlint": {
+    "extends": [
+      "@commitlint/config-conventional"
+    ]
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@commitlint/cli": "21.2.3",
+    "@commitlint/config-conventional": "21.2.3",
+    "lefthook": "2.2.2",
+    "typescript": "6.0.3"
+  }
+}
