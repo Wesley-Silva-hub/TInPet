@@ -5,8 +5,14 @@ import { RouterProvider } from 'react-router'
 import { Toaster } from 'sonner'
 import { ApiError } from './lib/api'
 import { AuthProvider } from './lib/auth'
+import { reloadForNewVersion } from './lib/versionReload'
 import { router } from './routes/router'
 import './index.css'
+
+// Arquivo de uma versão anterior do site (aba aberta antes do deploy): busca a versão nova
+window.addEventListener('vite:preloadError', (event) => {
+  if (reloadForNewVersion()) event.preventDefault()
+})
 
 const queryClient = new QueryClient({
   defaultOptions: {
