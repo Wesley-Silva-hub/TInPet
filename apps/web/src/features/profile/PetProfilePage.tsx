@@ -8,7 +8,7 @@ import {
   speciesLabels,
   vaccineStatusLabels,
 } from '@tinpet/shared'
-import { ArrowLeft, Pencil, ShieldAlert, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Pencil, ShieldAlert, ShieldCheck, Siren } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
@@ -18,6 +18,7 @@ import { ErrorState } from '../../components/ui/States'
 import { api } from '../../lib/api'
 import { useMe } from '../../lib/auth'
 import { petAge } from '../feed/SwipeCard'
+import { PetTagCard } from '../lostPets/PetTagCard'
 import { PostGrid } from '../social/PostGrid'
 
 /** Galeria com deslize (scroll-snap) e indicadores clicáveis. */
@@ -162,7 +163,27 @@ export function PetProfilePage() {
               </span>
             )}
           </div>
+          {data.activeAlertId && (
+            <Link
+              to={`/perdidos/${data.activeAlertId}`}
+              className="flex items-center gap-3 rounded-card bg-brand-600 p-4 font-semibold text-white shadow-lg shadow-brand-500/30"
+            >
+              <Siren className="size-6 shrink-0" aria-hidden />
+              {isMine
+                ? `Alerta de ${data.name} no ar. Ver avistamentos`
+                : `${data.name} está perdido! Viu? Toque aqui`}
+            </Link>
+          )}
           {data.bio && <p className="whitespace-pre-line text-lg">{data.bio}</p>}
+          {isMine && !data.activeAlertId && (
+            <Link
+              to={`/pets/${data.id}/perdido`}
+              className="inline-flex items-center gap-2 self-start rounded-full border-2 border-brand-500 px-4 py-2 font-semibold text-brand-700 hover:bg-brand-50 dark:text-brand-300 dark:hover:bg-brand-500/10"
+            >
+              <Siren className="size-4" aria-hidden /> Marcar como perdido
+            </Link>
+          )}
+          {isMine && <PetTagCard pet={data} />}
 
           {owner.data && (
             <Link

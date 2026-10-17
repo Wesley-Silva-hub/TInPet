@@ -1,5 +1,5 @@
 import type { Notification } from '@tinpet/shared'
-import { Bell, Heart, MessageCircle, Sparkles } from 'lucide-react'
+import { Bell, Eye, Heart, MessageCircle, PartyPopper, Siren, Sparkles } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
@@ -8,31 +8,17 @@ import { InfiniteSentinel } from '../../components/ui/InfiniteSentinel'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { EmptyState, ErrorState, LoadingState } from '../../components/ui/States'
 import { timeAgo } from '../../lib/time'
+import { describeNotification } from './describe'
 import { useNotifications, useReadAll } from './queries'
 
 const icons = {
   POST_LIKE: { icon: Heart, className: 'bg-brand-500 text-white' },
   POST_COMMENT: { icon: MessageCircle, className: 'bg-sky-600 text-white' },
   MATCH: { icon: Sparkles, className: 'bg-sun-400 text-ink' },
-} as const
-
-function describe(notification: Notification) {
-  const name = notification.actor?.name.split(' ')[0] ?? 'Alguém'
-  switch (notification.type) {
-    case 'POST_LIKE':
-      return { text: `${name} curtiu sua publicação.`, to: `/posts/${notification.postId}` }
-    case 'POST_COMMENT':
-      return {
-        text: `${name} comentou: “${notification.preview}”`,
-        to: `/posts/${notification.postId}`,
-      }
-    case 'MATCH':
-      return {
-        text: `Deu match com o pet de ${name}! Que tal dar um oi?`,
-        to: `/matches/${notification.matchId}`,
-      }
-  }
-}
+  LOST_PET_NEARBY: { icon: Siren, className: 'bg-brand-700 text-white' },
+  LOST_PET_SIGHTING: { icon: Eye, className: 'bg-leaf-500 text-white' },
+  LOST_PET_FOUND: { icon: PartyPopper, className: 'bg-leaf-500 text-white' },
+} as const satisfies Record<Notification['type'], unknown>
 
 export function NotificationsPage() {
   const notifications = useNotifications()
@@ -59,12 +45,13 @@ export function NotificationsPage() {
       )}
       {notifications.isSuccess && items.length === 0 && (
         <EmptyState icon={<Bell className="size-8" />} title="Nada por aqui ainda">
-          Quando alguém curtir, comentar ou der match com seu pet, você fica sabendo aqui.
+          Quando alguém curtir, comentar, der match ou um pet se perder perto de você, você fica
+          sabendo aqui.
         </EmptyState>
       )}
       <ul className="flex flex-col gap-1">
         {items.map((notification, index) => {
-          const { text, to } = describe(notification)
+          const { text, to } = describeNotification(notification)
           const { icon: Icon, className } = icons[notification.type]
           return (
             <motion.li
@@ -81,8 +68,8 @@ export function NotificationsPage() {
               >
                 <span className="relative shrink-0">
                   <Avatar
-                    src={notification.actor?.avatarUrl}
-                    name={notification.actor?.name ?? '?'}
+                    src={notification.actor?.avatarUrl ?? notification.petPhotoUrl}
+                    name={notification.actor?.name ?? notification.petName ?? '?'}
                     className="size-12"
                   />
                   <span
@@ -99,9 +86,10 @@ export function NotificationsPage() {
                     {timeAgo(notification.createdAt)}
                   </time>
                 </span>
-                {notification.postImageUrl && (
+                {(notification.postImageUrl ??
+                  (notification.actor && notification.petPhotoUrl)) && (
                   <img
-                    src={notification.postImageUrl}
+                    src={notification.postImageUrl ?? notification.petPhotoUrl ?? ''}
                     alt=""
                     className="size-12 shrink-0 rounded-lg object-cover"
                   />

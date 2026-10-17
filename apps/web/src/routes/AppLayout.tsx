@@ -8,6 +8,7 @@ import {
   PlusSquare,
   Settings,
   ShoppingBag,
+  Siren,
   Store,
   UserRound,
   Zap,
@@ -36,6 +37,7 @@ const ownerTabs: NavItem[] = [
 const ownerExtras: NavItem[] = [
   { to: '/noticias', label: 'Notícias', icon: Newspaper },
   { to: '/loja', label: 'Loja', icon: ShoppingBag },
+  { to: '/perdidos', label: 'Perdidos', icon: Siren },
 ]
 
 const companyTabs: NavItem[] = [

@@ -16,6 +16,7 @@ import { PostSkeleton } from '../../components/ui/Skeleton'
 import { EmptyState, ErrorState } from '../../components/ui/States'
 import { api } from '../../lib/api'
 import { useMe } from '../../lib/auth'
+import { LostPetsStrip } from '../lostPets/LostPetsPage'
 import { useOffers } from '../marketplace/offers'
 import { SponsoredCard } from '../marketplace/SponsoredCard'
 import { PostCard } from './PostCard'
@@ -44,6 +45,7 @@ export function HomePage() {
         </Link>
       </header>
 
+      <LostPetsStrip />
       <VaccineReminders />
       {items.length > 0 && <PetHighlights posts={items} />}
       <Trending />
