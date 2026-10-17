@@ -5,6 +5,7 @@ import { EmptyState } from '../components/ui/States'
 import { LandingPage } from '../features/landing/LandingPage'
 import { AppLayout } from './AppLayout'
 import { RedirectIfAuthenticated, RequireAuth } from './guards'
+import { RouteError } from './RouteError'
 
 /** Carrega a tela sob demanda: cada rota vira um chunk separado. */
 function page<K extends string, M extends Record<K, ComponentType>>(
@@ -26,113 +27,134 @@ function NotFound() {
 
 export const router = createBrowserRouter([
   {
-    element: <RedirectIfAuthenticated />,
+    // Qualquer erro de rota (inclusive versão desatualizada do site) cai numa tela amigável
+    errorElement: <RouteError />,
     children: [
-      { path: '/', element: <LandingPage /> },
-      { path: '/entrar', lazy: page(() => import('../features/auth/LoginPage'), 'LoginPage') },
       {
-        path: '/cadastro',
-        lazy: page(() => import('../features/auth/RegisterPage'), 'RegisterPage'),
+        element: <RedirectIfAuthenticated />,
+        children: [
+          { path: '/', element: <LandingPage /> },
+          { path: '/entrar', lazy: page(() => import('../features/auth/LoginPage'), 'LoginPage') },
+          {
+            path: '/cadastro',
+            lazy: page(() => import('../features/auth/RegisterPage'), 'RegisterPage'),
+          },
+        ],
       },
-    ],
-  },
-  { path: '/termos', lazy: page(() => import('../features/landing/TermsPage'), 'TermsPage') },
-  {
-    element: <RequireAuth />,
-    children: [
+      { path: '/termos', lazy: page(() => import('../features/landing/TermsPage'), 'TermsPage') },
       {
-        element: <AppLayout />,
+        element: <RequireAuth />,
         children: [
           {
-            path: '/loja',
-            lazy: page(() => import('../features/marketplace/MarketplacePage'), 'MarketplacePage'),
-          },
-          {
-            path: '/loja/:id',
-            lazy: page(() => import('../features/marketplace/ProductPage'), 'ProductPage'),
-          },
-          {
-            path: '/configuracoes',
-            lazy: page(() => import('../features/profile/SettingsPage'), 'SettingsPage'),
-          },
-          { path: '/noticias', lazy: page(() => import('../features/news/NewsPage'), 'NewsPage') },
-          {
-            path: '/noticias/:slug',
-            lazy: page(() => import('../features/news/ArticlePage'), 'ArticlePage'),
-          },
-          {
-            element: <RequireAuth roles={['OWNER']} />,
+            element: <AppLayout />,
             children: [
               {
-                path: '/inicio',
-                lazy: page(() => import('../features/social/HomePage'), 'HomePage'),
+                path: '/loja',
+                lazy: page(
+                  () => import('../features/marketplace/MarketplacePage'),
+                  'MarketplacePage',
+                ),
               },
               {
-                path: '/publicar',
-                lazy: page(() => import('../features/social/NewPostPage'), 'NewPostPage'),
+                path: '/loja/:id',
+                lazy: page(() => import('../features/marketplace/ProductPage'), 'ProductPage'),
               },
               {
-                path: '/posts/:id',
-                lazy: page(() => import('../features/social/PostPage'), 'PostPage'),
+                path: '/configuracoes',
+                lazy: page(() => import('../features/profile/SettingsPage'), 'SettingsPage'),
               },
               {
-                path: '/onboarding',
-                lazy: page(() => import('../features/profile/OnboardingPage'), 'OnboardingPage'),
-              },
-              { path: '/feed', lazy: page(() => import('../features/feed/FeedPage'), 'FeedPage') },
-              {
-                path: '/matches',
-                lazy: page(() => import('../features/matches/MatchesPage'), 'MatchesPage'),
+                path: '/noticias',
+                lazy: page(() => import('../features/news/NewsPage'), 'NewsPage'),
               },
               {
-                path: '/matches/:id',
-                lazy: page(() => import('../features/chat/ChatPage'), 'ChatPage'),
+                path: '/noticias/:slug',
+                lazy: page(() => import('../features/news/ArticlePage'), 'ArticlePage'),
               },
               {
-                path: '/perfil',
-                lazy: page(() => import('../features/profile/MyProfilePage'), 'MyProfilePage'),
+                element: <RequireAuth roles={['OWNER']} />,
+                children: [
+                  {
+                    path: '/inicio',
+                    lazy: page(() => import('../features/social/HomePage'), 'HomePage'),
+                  },
+                  {
+                    path: '/publicar',
+                    lazy: page(() => import('../features/social/NewPostPage'), 'NewPostPage'),
+                  },
+                  {
+                    path: '/posts/:id',
+                    lazy: page(() => import('../features/social/PostPage'), 'PostPage'),
+                  },
+                  {
+                    path: '/onboarding',
+                    lazy: page(
+                      () => import('../features/profile/OnboardingPage'),
+                      'OnboardingPage',
+                    ),
+                  },
+                  {
+                    path: '/feed',
+                    lazy: page(() => import('../features/feed/FeedPage'), 'FeedPage'),
+                  },
+                  {
+                    path: '/matches',
+                    lazy: page(() => import('../features/matches/MatchesPage'), 'MatchesPage'),
+                  },
+                  {
+                    path: '/matches/:id',
+                    lazy: page(() => import('../features/chat/ChatPage'), 'ChatPage'),
+                  },
+                  {
+                    path: '/perfil',
+                    lazy: page(() => import('../features/profile/MyProfilePage'), 'MyProfilePage'),
+                  },
+                  {
+                    path: '/pets/novo',
+                    lazy: page(() => import('../features/profile/PetFormPage'), 'PetFormPage'),
+                  },
+                  {
+                    path: '/pets/:id/editar',
+                    lazy: page(() => import('../features/profile/PetFormPage'), 'PetFormPage'),
+                  },
+                  {
+                    path: '/usuarios/:id',
+                    lazy: page(
+                      () => import('../features/profile/UserProfilePage'),
+                      'UserProfilePage',
+                    ),
+                  },
+                ],
               },
               {
-                path: '/pets/novo',
-                lazy: page(() => import('../features/profile/PetFormPage'), 'PetFormPage'),
+                element: <RequireAuth roles={['COMPANY']} />,
+                children: [
+                  {
+                    path: '/empresa',
+                    lazy: page(
+                      () => import('../features/marketplace/CompanyDashboardPage'),
+                      'CompanyDashboardPage',
+                    ),
+                  },
+                  {
+                    path: '/empresa/produtos/novo',
+                    lazy: page(
+                      () => import('../features/marketplace/ProductFormPage'),
+                      'ProductFormPage',
+                    ),
+                  },
+                  {
+                    path: '/empresa/produtos/:id',
+                    lazy: page(
+                      () => import('../features/marketplace/ProductFormPage'),
+                      'ProductFormPage',
+                    ),
+                  },
+                ],
               },
-              {
-                path: '/pets/:id/editar',
-                lazy: page(() => import('../features/profile/PetFormPage'), 'PetFormPage'),
-              },
-              {
-                path: '/usuarios/:id',
-                lazy: page(() => import('../features/profile/UserProfilePage'), 'UserProfilePage'),
-              },
+              { path: '*', element: <NotFound /> },
             ],
           },
-          {
-            element: <RequireAuth roles={['COMPANY']} />,
-            children: [
-              {
-                path: '/empresa',
-                lazy: page(
-                  () => import('../features/marketplace/CompanyDashboardPage'),
-                  'CompanyDashboardPage',
-                ),
-              },
-              {
-                path: '/empresa/produtos/novo',
-                lazy: page(
-                  () => import('../features/marketplace/ProductFormPage'),
-                  'ProductFormPage',
-                ),
-              },
-              {
-                path: '/empresa/produtos/:id',
-                lazy: page(
-                  () => import('../features/marketplace/ProductFormPage'),
-                  'ProductFormPage',
-                ),
-              },
-            ],
-          },
-          { path: '*', element: <NotFound /> },
         ],
       },
     ],

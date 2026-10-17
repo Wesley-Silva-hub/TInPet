@@ -12,12 +12,19 @@
   LEFTHOOK = "0"
 
 # API no Render pela mesma origem (o cookie de sessão fica first-party).
-# Troque pela URL real do serviço no Render.
+# Serviço "tinpet-api" no Render (render.yaml).
 [[redirects]]
   from = "/api/*"
   to = "https://tinpet-api.onrender.com/api/:splat"
   status = 200
   force = true
+
+# Arquivo de build inexistente (aba com versão antiga) deve dar 404, não o index.html:
+# assim o app detecta o erro e recarrega para a versão nova
+[[redirects]]
+  from = "/assets/*"
+  to = "/404.html"
+  status = 404
 
 # SPA: qualquer outra rota cai no index.html
 [[redirects]]
