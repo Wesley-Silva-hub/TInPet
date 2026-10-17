@@ -43,6 +43,10 @@ export const router = createBrowserRouter([
       },
       { path: '/termos', lazy: page(() => import('../features/landing/TermsPage'), 'TermsPage') },
       {
+        path: '/p/:code',
+        lazy: page(() => import('../features/lostPets/PublicTagPage'), 'PublicTagPage'),
+      },
+      {
         element: <RequireAuth />,
         children: [
           {
@@ -58,6 +62,17 @@ export const router = createBrowserRouter([
               {
                 path: '/loja/:id',
                 lazy: page(() => import('../features/marketplace/ProductPage'), 'ProductPage'),
+              },
+              {
+                path: '/perdidos',
+                lazy: page(() => import('../features/lostPets/LostPetsPage'), 'LostPetsPage'),
+              },
+              {
+                path: '/perdidos/:id',
+                lazy: page(
+                  () => import('../features/lostPets/LostPetAlertPage'),
+                  'LostPetAlertPage',
+                ),
               },
               {
                 path: '/lojas',
@@ -133,6 +148,13 @@ export const router = createBrowserRouter([
                     lazy: page(
                       () => import('../features/notifications/NotificationsPage'),
                       'NotificationsPage',
+                    ),
+                  },
+                  {
+                    path: '/pets/:id/perdido',
+                    lazy: page(
+                      () => import('../features/lostPets/ReportLostPage'),
+                      'ReportLostPage',
                     ),
                   },
                   {

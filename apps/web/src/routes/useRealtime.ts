@@ -3,6 +3,8 @@ import type { Message, Page } from '@tinpet/shared'
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
+import { lostPetsKey } from '../features/lostPets/queries'
+import { describeNotification } from '../features/notifications/describe'
 import { notificationsKey, unreadKey } from '../features/notifications/queries'
 import { connectSocket, disconnectSocket } from '../lib/socket'
 
@@ -38,7 +40,16 @@ export function useRealtime(enabled: boolean) {
       queryClient.invalidateQueries({ queryKey: matchesKey })
     })
 
-    socket.on('notification:new', () => {
+    socket.on('notification:new', (notification) => {
+      if (notification.type.startsWith('LOST_PET')) {
+        queryClient.invalidateQueries({ queryKey: lostPetsKey })
+        const { text, to } = describeNotification(notification)
+        const show = notification.type === 'LOST_PET_FOUND' ? toast.success : toast.warning
+        show(text, {
+          duration: 12_000,
+          action: { label: 'Ver', onClick: () => navigate(to) },
+        })
+      }
       queryClient.setQueryData<{ unread: number }>(unreadKey, (data) => ({
         unread: (data?.unread ?? 0) + 1,
       }))

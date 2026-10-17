@@ -20,6 +20,7 @@ const item: FeedItem = {
     isActive: true,
     photos: [],
     vaccineStatus: 'UP_TO_DATE',
+    activeAlertId: null,
   },
   owner: {
     id: '22222222-2222-4222-8222-222222222222',
