@@ -7,50 +7,105 @@ import {
   updateProfileSchema,
 } from '@tinpet/shared'
 import { Camera, Plus, Settings } from 'lucide-react'
-import { useRef } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
+import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
 import { Field } from '../../components/ui/Field'
-import { PageHeader } from '../../components/ui/PageHeader'
 import { ErrorState, LoadingState } from '../../components/ui/States'
 import { api, errorMessage } from '../../lib/api'
 import { useAuth, useMe } from '../../lib/auth'
 import { ACCEPTED_IMAGES, compressImage } from '../../lib/image'
+import { PostGrid } from '../social/PostGrid'
 import { LocationCard } from './LocationCard'
 import { useLookups, useMyPets, useUploadAvatar } from './queries'
 
 export function MyProfilePage() {
   const me = useMe()
   const lookups = useLookups()
+  const pets = useMyPets()
+  const [editing, setEditing] = useState(false)
+  const details = [me.profession?.name, [me.city, me.state].filter(Boolean).join(' – ')].filter(
+    Boolean,
+  )
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
-      <PageHeader
-        title="Meu perfil"
-        action={
-          <Link
-            to="/configuracoes"
-            className="inline-flex items-center gap-1 font-semibold text-muted hover:text-ink"
+      <section className="flex items-center gap-5 sm:gap-8">
+        <span className="rounded-full bg-gradient-to-tr from-sun-400 via-brand-500 to-brand-700 p-[3px]">
+          <span className="block rounded-full bg-canvas p-1">
+            <Avatar src={me.avatarUrl} name={me.name} className="size-24 sm:size-32" />
+          </span>
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="text-2xl font-semibold sm:text-3xl">{me.name}</h1>
+            <Link
+              to="/configuracoes"
+              aria-label="Configurações"
+              className="rounded-full p-2 text-muted hover:bg-surface-2 hover:text-ink"
+            >
+              <Settings className="size-5" aria-hidden />
+            </Link>
+          </div>
+          {details.length > 0 && <p className="text-muted">{details.join(' · ')}</p>}
+          <p className="text-sm">
+            <b>{pets.data?.length ?? 0}</b> {pets.data?.length === 1 ? 'pet' : 'pets'}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              variant="secondary"
+              className="min-h-9 px-4 py-1.5 text-sm"
+              onClick={() => setEditing((value) => !value)}
+              aria-expanded={editing}
+            >
+              {editing ? 'Fechar edição' : 'Editar perfil'}
+            </Button>
+            <Link
+              to="/publicar"
+              className="inline-flex min-h-9 items-center gap-1 rounded-full bg-brand-500 px-4 text-sm font-semibold text-white hover:bg-brand-600"
+            >
+              <Camera className="size-4" aria-hidden /> Publicar
+            </Link>
+          </div>
+        </div>
+      </section>
+      {me.bio && <p className="whitespace-pre-line">{me.bio}</p>}
+
+      <AnimatePresence initial={false}>
+        {editing && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="flex flex-col gap-6 overflow-hidden"
           >
-            <Settings className="size-5" aria-hidden /> Configurações
-          </Link>
-        }
-      />
+            <LocationCard />
+            {lookups.isPending ? (
+              <LoadingState />
+            ) : lookups.isError ? (
+              <ErrorState error={lookups.error} onRetry={() => lookups.refetch()} />
+            ) : (
+              <ProfileForm
+                me={me}
+                maritalStatuses={lookups.data.maritalStatuses}
+                professions={lookups.data.professions}
+              />
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <MyPets />
-      <LocationCard />
-      {lookups.isPending ? (
-        <LoadingState />
-      ) : lookups.isError ? (
-        <ErrorState error={lookups.error} onRetry={() => lookups.refetch()} />
-      ) : (
-        <ProfileForm
-          me={me}
-          maritalStatuses={lookups.data.maritalStatuses}
-          professions={lookups.data.professions}
-        />
-      )}
+      <section aria-labelledby="minhas-fotos" className="flex flex-col gap-3">
+        <h2 id="minhas-fotos" className="text-lg font-semibold">
+          Publicações
+        </h2>
+        <PostGrid authorId={me.id} emptyText="Você ainda não publicou. Que tal a primeira foto?" />
+      </section>
     </div>
   )
 }

@@ -66,5 +66,5 @@ export function useMe(): Me {
 }
 
 export function homePathFor(user: Me) {
-  return user.role === 'COMPANY' ? '/empresa' : '/feed'
+  return user.role === 'COMPANY' ? '/empresa' : '/inicio'
 }
