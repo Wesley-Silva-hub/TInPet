@@ -67,6 +67,14 @@ enum ArticleCategory {
   EVENTS
 }
 
+enum CompanyKind {
+  PETSHOP
+  VET_CLINIC
+  GROOMING
+  STORE
+  OTHER
+}
+
 enum NotificationType {
   POST_LIKE
   POST_COMMENT
@@ -102,22 +110,24 @@ model User {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  maritalStatus     MaritalStatus?  @relation(fields: [maritalStatusId], references: [id], onDelete: SetNull)
-  profession        Profession?     @relation(fields: [professionId], references: [id], onDelete: SetNull)
+  maritalStatus     MaritalStatus?        @relation(fields: [maritalStatusId], references: [id], onDelete: SetNull)
+  profession        Profession?           @relation(fields: [professionId], references: [id], onDelete: SetNull)
   company           CompanyProfile?
   pets              Pet[]
   products          Product[]
   messages          Message[]
   refreshTokens     RefreshToken[]
-  blocksMade        Block[]         @relation("Blocker")
-  blocksReceived    Block[]         @relation("Blocked")
-  reportsMade       Report[]        @relation("Reporter")
-  reportsAgainst    Report[]        @relation("Reported")
+  blocksMade        Block[]               @relation("Blocker")
+  blocksReceived    Block[]               @relation("Blocked")
+  reportsMade       Report[]              @relation("Reporter")
+  reportsAgainst    Report[]              @relation("Reported")
   posts             Post[]
   postLikes         PostLike[]
   postComments      PostComment[]
-  notifications     Notification[]  @relation("NotificationRecipient")
-  notificationsSent Notification[]  @relation("NotificationActor")
+  notifications     Notification[]        @relation("NotificationRecipient")
+  notificationsSent Notification[]        @relation("NotificationActor")
+  promotions        Promotion[]
+  promotionViews    PromotionImpression[]
 
   @@index([maritalStatusId])
   @@index([professionId])
@@ -143,12 +153,18 @@ model Profession {
 
 /// Dados da empresa anunciante (usuário com papel COMPANY).
 model CompanyProfile {
-  userId    String  @id @map("user_id") @db.Uuid
-  tradeName String  @map("trade_name") @db.VarChar(120)
-  cnpj      String  @unique @db.Char(14)
-  phone     String? @db.VarChar(20)
-  website   String? @db.VarChar(300)
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String      @id @map("user_id") @db.Uuid
+  tradeName    String      @map("trade_name") @db.VarChar(120)
+  cnpj         String      @unique @db.Char(14)
+  phone        String?     @db.VarChar(20)
+  website      String?     @db.VarChar(300)
+  kind         CompanyKind @default(PETSHOP)
+  description  String      @default("") @db.VarChar(500)
+  neighborhood String      @default("") @db.VarChar(80)
+  /// Endereço comercial público (opcional)
+  address      String      @default("") @db.VarChar(200)
+  delivers     Boolean     @default(false)
+  user         User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("company_profiles")
 }
@@ -262,9 +278,12 @@ model Product {
   imageKey     String?         @map("image_key")
   externalLink String?         @map("external_link") @db.VarChar(500)
   isActive     Boolean         @default(true) @map("is_active")
+  /// Espécies para as quais o produto serve (vazio = todas)
+  species      Species[]       @default([])
   createdAt    DateTime        @default(now()) @map("created_at")
   updatedAt    DateTime        @updatedAt @map("updated_at")
   company      User            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  promotions   Promotion[]
 
   @@index([companyId])
   @@index([category, isActive, createdAt])
@@ -421,4 +440,44 @@ model Notification {
   @@index([postId])
   @@index([matchId])
   @@map("notifications")
+}
+
+/// Anúncio impulsionado por uma loja: oferta relâmpago/cupom mostrada a quem tem o pet certo e mora perto.
+model Promotion {
+  id              String                @id @default(uuid()) @db.Uuid
+  companyId       String                @map("company_id") @db.Uuid
+  productId       String                @map("product_id") @db.Uuid
+  headline        String                @db.VarChar(80)
+  discountPercent Int?                  @map("discount_percent")
+  couponCode      String?               @map("coupon_code") @db.VarChar(30)
+  /// Espécies do público (vazio = todas)
+  species         Species[]             @default([])
+  radiusKm        Int                   @default(10) @map("radius_km")
+  startsAt        DateTime              @default(now()) @map("starts_at")
+  endsAt          DateTime              @map("ends_at")
+  pausedAt        DateTime?             @map("paused_at")
+  clicks          Int                   @default(0)
+  couponReveals   Int                   @default(0) @map("coupon_reveals")
+  createdAt       DateTime              @default(now()) @map("created_at")
+  company         User                  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  product         Product               @relation(fields: [productId], references: [id], onDelete: Cascade)
+  impressions     PromotionImpression[]
+
+  @@index([companyId])
+  @@index([endsAt, startsAt])
+  @@index([productId])
+  @@map("promotions")
+}
+
+/// Visualização única por pessoa por dia (métrica honesta para a loja).
+model PromotionImpression {
+  promotionId String    @map("promotion_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  day         DateTime  @db.Date
+  promotion   Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([promotionId, userId, day])
+  @@index([userId])
+  @@map("promotion_impressions")
 }
