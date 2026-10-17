@@ -1,0 +1,33 @@
+# Blueprint da API no Render (plano grátis). Ver docs/deploy-gratuito.md.
+services:
+  - type: web
+    name: tinpet-api
+    runtime: docker
+    plan: free
+    # Mesma região do projeto Supabase (East US) para as consultas ao banco serem rápidas
+    region: virginia
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    branch: main
+    # Só publica depois do CI verde
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: "true"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: STORAGE_DRIVER
+        value: supabase
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
