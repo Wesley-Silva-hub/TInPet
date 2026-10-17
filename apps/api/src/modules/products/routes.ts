@@ -5,6 +5,7 @@ import {
   productSchema,
   productsQuerySchema,
   productUpdateSchema,
+  recommendedProductSchema,
 } from '@tinpet/shared'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
@@ -26,7 +27,16 @@ export const productRoutes: FastifyPluginAsyncZod = async (app) => {
         response: { 200: pageSchema(productSchema) },
       },
     },
-    (request) => service.list(request.query),
+    async (request) => service.list(await app.viewer(request), request.query),
+  )
+
+  app.get(
+    '/recommended',
+    {
+      ...secured,
+      schema: { tags, security, response: { 200: z.array(recommendedProductSchema) } },
+    },
+    (request) => service.recommended(request.auth),
   )
 
   app.get(
@@ -38,7 +48,7 @@ export const productRoutes: FastifyPluginAsyncZod = async (app) => {
   app.get(
     '/:id',
     { schema: { tags, params: idParamsSchema, response: { 200: productSchema } } },
-    (request) => service.get(request.params.id),
+    async (request) => service.get(await app.viewer(request), request.params.id),
   )
 
   app.post(

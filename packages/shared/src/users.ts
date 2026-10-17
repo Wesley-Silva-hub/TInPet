@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { ageFrom, isoDateSchema } from './common'
+import { companyKindSchema } from './products'
 
 export const MIN_USER_AGE = 18
 
@@ -90,7 +91,16 @@ export const meSchema = z.object({
   hasLocation: z.boolean(),
   consentLocationAt: z.string().nullable(),
   company: companyProfileSchema
-    .extend({ cnpj: z.string(), phone: z.string().nullable(), website: z.string().nullable() })
+    .extend({
+      cnpj: z.string(),
+      phone: z.string().nullable(),
+      website: z.string().nullable(),
+      kind: companyKindSchema,
+      description: z.string(),
+      neighborhood: z.string(),
+      address: z.string(),
+      delivers: z.boolean(),
+    })
     .nullable(),
 })
 export type Me = z.infer<typeof meSchema>

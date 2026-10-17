@@ -1,6 +1,7 @@
 import type { Me, Pet, Product, PublicUser } from '@tinpet/shared'
 import { ageFrom, vaccineStatusOf } from '@tinpet/shared'
 import type { Prisma } from '../generated/prisma/client'
+import { type Coordinates, distanceKm } from './geo'
 import type { StorageProvider } from './storage/storage'
 
 // Conversão de registros do banco para os contratos públicos (packages/shared).
@@ -88,6 +89,11 @@ export function toMe(user: MeWithRelations, storage: StorageProvider): Me {
       cnpj: user.company.cnpj,
       phone: user.company.phone,
       website: user.company.website,
+      kind: user.company.kind,
+      description: user.company.description,
+      neighborhood: user.company.neighborhood,
+      address: user.company.address,
+      delivers: user.company.delivers,
     },
   }
 }
@@ -98,7 +104,13 @@ export const productInclude = {
 
 type ProductWithCompany = Prisma.ProductGetPayload<{ include: typeof productInclude }>
 
-export function toProduct(product: ProductWithCompany, storage: StorageProvider): Product {
+/** A localização de quem vê (opcional) permite mostrar a distância até a loja. */
+export function toProduct(
+  product: ProductWithCompany,
+  storage: StorageProvider,
+  viewer: Coordinates | null = null,
+): Product {
+  const store = product.company.company
   return {
     id: product.id,
     title: product.title,
@@ -109,11 +121,16 @@ export function toProduct(product: ProductWithCompany, storage: StorageProvider)
     externalLink: product.externalLink,
     isActive: product.isActive,
     createdAt: product.createdAt.toISOString(),
+    species: product.species,
+    distanceKm: distanceKm(viewer, product.company),
     company: {
       id: product.companyId,
-      tradeName: product.company.company?.tradeName ?? product.company.name,
-      phone: product.company.company?.phone ?? null,
-      website: product.company.company?.website ?? null,
+      tradeName: store?.tradeName ?? product.company.name,
+      kind: store?.kind ?? 'OTHER',
+      neighborhood: store?.neighborhood ?? '',
+      phone: store?.phone ?? null,
+      website: store?.website ?? null,
+      delivers: store?.delivers ?? false,
     },
   }
 }
