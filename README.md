@@ -6,7 +6,9 @@ O TinPet é uma aplicação web que conecta tutores de animais de estimação: o
 ## 🌟 Funcionalidades
 
 - **Cadastro e login** com consentimento explícito (termos e localização)
-- **Feed com swipe** de pets compatíveis, ordenado por distância aproximada
+- **Feed social** estilo Instagram: fotos com curtidas e comentários
+- **Descobrir (swipe)** de pets compatíveis, ordenado por distância aproximada
+- **Notícias e dicas** sobre saúde, comportamento, adoção e eventos
 - **Match** quando os dois lados curtem, e **chat em tempo real** entre os tutores
 - **Perfil do tutor** (idade, estado civil, profissão, bio, foto) e vários pets por conta
 - **Marketplace**: empresas anunciam ração, acessórios e serviços
@@ -18,7 +20,7 @@ O TinPet é uma aplicação web que conecta tutores de animais de estimação: o
 |---|---|
 | Monorepo | pnpm workspaces · Node 22 · TypeScript strict |
 | API | Fastify 5 · Zod · Prisma 7 (PostgreSQL) · Socket.IO · pino |
-| Web | React 19 · Vite · Tailwind CSS 4 · TanStack Query · React Hook Form · React Router |
+| Web | React 19 · Vite · Tailwind CSS 4 · Motion · TanStack Query · React Hook Form · React Router |
 | Qualidade | Biome · Vitest · Lefthook + commitlint · GitHub Actions |
 | Hospedagem (grátis) | Supabase (Postgres + Storage) · Render (API) · Netlify (web) |
 
@@ -38,8 +40,8 @@ pnpm db:migrate && pnpm db:seed   # cria as tabelas e dados de demonstração
 pnpm dev                          # API em :3333 e web em http://localhost:5173
 ```
 
-Contas de demonstração (senha `tinpet123`): `ana@tinpet.dev`, `bruno@tinpet.dev`, `felipe@tinpet.dev` (tutores) e `pet@tinpet.dev` (empresa).
-Dica: entre como Ana e curta o **Rex** para ver um match acontecer na hora.
+Contas de demonstração (senha `tinpet123`): `rafael@tinpet.dev`, `larissa@tinpet.dev`, `paula@tinpet.dev`, `bianca@tinpet.dev` (tutores) e `pet@tinpet.dev` (empresa). São 16 tutores, 22 pets, ~40 publicações e 10 artigos com fotos reais CC0 (créditos em `apps/api/prisma/seed-assets/CREDITS.md`).
+Dica: entre como Rafael, vá em **Descobrir** e curta a **Kira** para ver um match acontecer na hora.
 
 Documentação interativa da API: http://localhost:3333/api/docs
 
