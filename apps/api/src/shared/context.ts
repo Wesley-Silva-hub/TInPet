@@ -19,6 +19,8 @@ declare module 'fastify' {
   interface FastifyInstance {
     deps: AppDeps
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>
+    /** Usuário logado, se houver token válido; rotas públicas usam para personalizar. */
+    viewer: (request: FastifyRequest) => Promise<AuthUser | null>
   }
   interface FastifyRequest {
     auth: AuthUser
@@ -31,5 +33,10 @@ export function registerAuthentication(app: FastifyInstance) {
     const token = bearerToken(request)
     if (!token) throw unauthorized()
     request.auth = await app.deps.tokens.verify(token)
+  })
+  app.decorate('viewer', async (request: FastifyRequest) => {
+    const token = bearerToken(request)
+    if (!token) return null
+    return app.deps.tokens.verify(token).catch(() => null)
   })
 }

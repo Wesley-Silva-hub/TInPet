@@ -25,8 +25,10 @@ import { newsRoutes } from './modules/news/routes'
 import { notificationRoutes } from './modules/notifications/routes'
 import { petRoutes } from './modules/pets/routes'
 import { productRoutes } from './modules/products/routes'
+import { promotionRoutes } from './modules/promotions/routes'
 import { safetyRoutes } from './modules/safety/routes'
 import { socialRoutes } from './modules/social/routes'
+import { storeRoutes } from './modules/stores/routes'
 import { userRoutes } from './modules/users/routes'
 import { TokenService } from './shared/auth'
 import { type AppDeps, registerAuthentication } from './shared/context'
@@ -149,6 +151,8 @@ export async function buildApp({ env, db, storage }: BuildAppOptions) {
       await api.register(socialRoutes)
       await api.register(newsRoutes)
       await api.register(healthRoutes)
+      await api.register(storeRoutes)
+      await api.register(promotionRoutes, { prefix: '/promotions' })
       await api.register(notificationRoutes, { prefix: '/notifications' })
     },
     { prefix: '/api/v1' },
