@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { paginationQuerySchema } from './common'
 import type { matchSummarySchema } from './matching'
+import type { Notification } from './notifications'
 
 export const MAX_MESSAGE_LENGTH = 2000
 
@@ -28,6 +29,7 @@ export interface ServerToClientEvents {
   'match:new': (match: z.infer<typeof matchSummarySchema>) => void
   'message:new': (message: Message) => void
   'message:read': (payload: { matchId: string; readerId: string; readAt: string }) => void
+  'notification:new': (notification: Notification) => void
 }
 
 export interface ClientToServerEvents {

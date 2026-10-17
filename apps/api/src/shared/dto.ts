@@ -1,5 +1,5 @@
 import type { Me, Pet, Product, PublicUser } from '@tinpet/shared'
-import { ageFrom } from '@tinpet/shared'
+import { ageFrom, vaccineStatusOf } from '@tinpet/shared'
 import type { Prisma } from '../generated/prisma/client'
 import type { StorageProvider } from './storage/storage'
 
@@ -14,6 +14,8 @@ export const roundCoordinate = (value: number) => Math.round(value * 100) / 100
 export const petInclude = {
   photos: { orderBy: { position: 'asc' } },
   breed: true,
+  // Só a data do reforço: o detalhe das vacinas é privado do tutor
+  vaccines: { select: { nextDueAt: true } },
 } satisfies Prisma.PetInclude
 
 type PetWithRelations = Prisma.PetGetPayload<{ include: typeof petInclude }>
@@ -32,6 +34,7 @@ export function toPet(pet: PetWithRelations, storage: StorageProvider): Pet {
     bio: pet.bio,
     purpose: pet.purpose,
     isActive: pet.isActive,
+    vaccineStatus: vaccineStatusOf(pet.vaccines.map((vaccine) => vaccine.nextDueAt)),
     photos: pet.photos.map((photo) => ({
       id: photo.id,
       url: storage.publicUrl(photo.storageKey),

@@ -4,10 +4,11 @@ import {
   type feedQuerySchema,
   type MatchSummary,
   type Page,
+  petAffinity,
   type SwipeInput,
 } from '@tinpet/shared'
 import type { z } from 'zod'
-import { Prisma } from '../../generated/prisma/client'
+import { type Pet as PetRow, Prisma } from '../../generated/prisma/client'
 import type { AuthUser } from '../../shared/auth'
 import type { AppDeps } from '../../shared/context'
 import {
@@ -15,12 +16,21 @@ import {
   encodeCursor,
   petInclude,
   publicUserInclude,
+  toDateOnly,
   toPet,
   toPublicUser,
 } from '../../shared/dto'
 import { badRequest, conflict, forbidden, isUniqueViolation, notFound } from '../../shared/errors'
+import { createNotifier } from '../notifications/service'
 
 const KM_PER_LATITUDE_DEGREE = 111
+
+const affinityInput = (pet: PetRow) => ({
+  size: pet.size,
+  purpose: pet.purpose,
+  breedId: pet.breedId,
+  birthDate: pet.birthDate ? toDateOnly(pet.birthDate) : null,
+})
 /** Ordenação de quem não tem localização: depois de todos os que têm. */
 const NO_DISTANCE_SORT_KEY = 2_147_483_647
 
@@ -61,7 +71,9 @@ function blockFreeWith(userId: string): Prisma.UserWhereInput {
   }
 }
 
-export function createMatchingService({ db, storage, realtime }: AppDeps) {
+export function createMatchingService(deps: AppDeps) {
+  const { db, storage, realtime } = deps
+  const notifier = createNotifier(deps)
   function toSummary(
     match: MatchWithRelations,
     viewerId: string,
@@ -101,8 +113,23 @@ export function createMatchingService({ db, storage, realtime }: AppDeps) {
 
     /** Pets compatíveis ainda não avaliados, ordenados por distância (Haversine), paginados por cursor. */
     async feed(user: AuthUser, query: z.output<typeof feedQuerySchema>): Promise<Page<FeedItem>> {
-      await myActivePet(user, query.petId)
+      const mine = await myActivePet(user, query.petId)
       const cursor = decodeCursor(query.cursor, isFeedCursor)
+      const sizes = query.sizes?.split(',')
+      // Filtros opcionais do tutor: porte e faixa de idade (anos completos)
+      const filters = Prisma.sql`
+        ${sizes ? Prisma.sql`AND c.size::text = ANY(${sizes}::text[])` : Prisma.empty}
+        ${
+          query.minAge !== undefined
+            ? Prisma.sql`AND c.birth_date <= CURRENT_DATE - make_interval(years => ${query.minAge}::int)`
+            : Prisma.empty
+        }
+        ${
+          query.maxAge !== undefined
+            ? Prisma.sql`AND c.birth_date > CURRENT_DATE - make_interval(years => ${query.maxAge + 1}::int)`
+            : Prisma.empty
+        }
+      `
       const latitudeWindow = query.maxDistanceKm / KM_PER_LATITUDE_DEGREE
 
       const rows = await db.$queryRaw<
@@ -143,6 +170,7 @@ export function createMatchingService({ db, storage, realtime }: AppDeps) {
               WHERE (b.blocker_id = me.owner_id AND b.blocked_id = c.owner_id)
                  OR (b.blocker_id = c.owner_id AND b.blocked_id = me.owner_id)
             )
+            ${filters}
         ),
         ranked AS (
           SELECT id, distance_km,
@@ -165,11 +193,14 @@ export function createMatchingService({ db, storage, realtime }: AppDeps) {
       const items = page.flatMap((row) => {
         const pet = byId.get(row.id)
         if (!pet) return []
+        const distanceKm =
+          row.distance_km === null ? null : Math.max(1, Math.round(row.distance_km))
         return [
           {
             pet: toPet(pet, storage),
             owner: toPublicUser(pet.owner, storage),
-            distanceKm: row.distance_km === null ? null : Math.max(1, Math.round(row.distance_km)),
+            distanceKm,
+            affinity: petAffinity(affinityInput(mine), affinityInput(pet), distanceKm),
           },
         ]
       })
@@ -225,6 +256,7 @@ export function createMatchingService({ db, storage, realtime }: AppDeps) {
         include: matchInclude,
       })
       realtime.toUsers([to.ownerId], 'match:new', toSummary(match, to.ownerId, 0))
+      await notifier.matched(match.id, user.id, to.ownerId)
       return toSummary(match, user.id, 0)
     },
 
