@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  qualidade:
+    name: Lint, tipos e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm build
+      - name: Auditoria de dependências
+        run: pnpm audit --prod --audit-level high
+
+  testes:
+    name: Testes
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: tinpet
+          POSTGRES_PASSWORD: tinpet
+          POSTGRES_DB: tinpet_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U tinpet"
+          --health-interval 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://tinpet:tinpet@localhost:5432/tinpet_test
+      DATABASE_URL: postgresql://tinpet:tinpet@localhost:5432/tinpet_test
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Schema Prisma válido
+        run: pnpm --filter @tinpet/api exec prisma validate
+      - run: pnpm test
+      - name: Nenhuma mudança de schema sem migration
+        # Após os testes o banco tem todas as migrations; o diff com o schema precisa ser vazio
+        run: pnpm --filter @tinpet/api exec prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --exit-code
