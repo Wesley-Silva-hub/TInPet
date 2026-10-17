@@ -79,6 +79,23 @@ enum NotificationType {
   POST_LIKE
   POST_COMMENT
   MATCH
+  /// Pet perdido perto de você
+  LOST_PET_NEARBY
+  /// Alguém viu o seu pet perdido (pelo app ou pela coleira)
+  LOST_PET_SIGHTING
+  /// O pet que você ajudou a procurar foi encontrado
+  LOST_PET_FOUND
+}
+
+enum LostPetStatus {
+  ACTIVE
+  FOUND
+  CANCELLED
+}
+
+enum SightingSource {
+  APP
+  TAG
 }
 
 enum ReportReason {
@@ -127,6 +144,8 @@ model User {
   notifications     Notification[]        @relation("NotificationRecipient")
   notificationsSent Notification[]        @relation("NotificationActor")
   promotions        Promotion[]
+  lostPetAlerts     LostPetAlert[]
+  petSightings      PetSighting[]
   promotionViews    PromotionImpression[]
 
   @@index([maritalStatusId])
@@ -191,18 +210,23 @@ model Pet {
   bio       String     @default("") @db.VarChar(500)
   purpose   PetPurpose
   isActive  Boolean    @default(true) @map("is_active")
+  /// Código da plaquinha QR (gerado sob demanda)
+  tagCode   String?    @unique @map("tag_code") @db.VarChar(16)
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
-  owner          User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  breed          Breed?       @relation(fields: [breedId], references: [id], onDelete: SetNull)
+  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  breed          Breed?         @relation(fields: [breedId], references: [id], onDelete: SetNull)
   photos         PetPhoto[]
-  swipesMade     Swipe[]      @relation("SwipeFrom")
-  swipesReceived Swipe[]      @relation("SwipeTo")
-  matchesAsA     Match[]      @relation("MatchPetA")
-  matchesAsB     Match[]      @relation("MatchPetB")
+  swipesMade     Swipe[]        @relation("SwipeFrom")
+  swipesReceived Swipe[]        @relation("SwipeTo")
+  matchesAsA     Match[]        @relation("MatchPetA")
+  matchesAsB     Match[]        @relation("MatchPetB")
   posts          Post[]
   vaccines       PetVaccine[]
+  lostAlerts     LostPetAlert[]
+  sightings      PetSighting[]
+  notifications  Notification[]
 
   @@index([ownerId])
   @@index([breedId])
@@ -425,6 +449,8 @@ model Notification {
   type      NotificationType
   postId    String?          @map("post_id") @db.Uuid
   matchId   String?          @map("match_id") @db.Uuid
+  petId     String?          @map("pet_id") @db.Uuid
+  alertId   String?          @map("alert_id") @db.Uuid
   /// Trecho do comentário, quando houver
   preview   String           @default("") @db.VarChar(140)
   readAt    DateTime?        @map("read_at")
@@ -433,6 +459,8 @@ model Notification {
   actor     User?            @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
   post      Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
   match     Match?           @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  pet       Pet?             @relation(fields: [petId], references: [id], onDelete: Cascade)
+  alert     LostPetAlert?    @relation(fields: [alertId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([userId, readAt])
@@ -480,4 +508,51 @@ model PromotionImpression {
   @@id([promotionId, userId, day])
   @@index([userId])
   @@map("promotion_impressions")
+}
+
+/// Alerta de pet perdido. A posição fica arredondada (~1 km) e só a distância é exibida.
+model LostPetAlert {
+  id           String        @id @default(uuid()) @db.Uuid
+  petId        String        @map("pet_id") @db.Uuid
+  ownerId      String        @map("owner_id") @db.Uuid
+  status       LostPetStatus @default(ACTIVE)
+  description  String        @default("") @db.VarChar(500)
+  rewardCents  Int?          @map("reward_cents")
+  neighborhood String        @default("") @db.VarChar(80)
+  latitude     Float
+  longitude    Float
+  lastSeenAt   DateTime      @map("last_seen_at")
+  resolvedAt   DateTime?     @map("resolved_at")
+  createdAt    DateTime      @default(now()) @map("created_at")
+
+  pet           Pet            @relation(fields: [petId], references: [id], onDelete: Cascade)
+  owner         User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  sightings     PetSighting[]
+  notifications Notification[]
+
+  @@index([status, createdAt])
+  @@index([petId])
+  @@map("lost_pet_alerts")
+}
+
+/// "Vi este pet": pelo app (alerta ativo) ou pela plaquinha QR. Só o tutor vê o local e o contato.
+model PetSighting {
+  id         String         @id @default(uuid()) @db.Uuid
+  petId      String         @map("pet_id") @db.Uuid
+  alertId    String?        @map("alert_id") @db.Uuid
+  reporterId String?        @map("reporter_id") @db.Uuid
+  source     SightingSource
+  message    String         @db.VarChar(300)
+  contact    String         @default("") @db.VarChar(80)
+  latitude   Float?
+  longitude  Float?
+  createdAt  DateTime       @default(now()) @map("created_at")
+
+  pet      Pet           @relation(fields: [petId], references: [id], onDelete: Cascade)
+  alert    LostPetAlert? @relation(fields: [alertId], references: [id], onDelete: SetNull)
+  reporter User?         @relation(fields: [reporterId], references: [id], onDelete: SetNull)
+
+  @@index([petId, createdAt])
+  @@index([alertId])
+  @@map("pet_sightings")
 }

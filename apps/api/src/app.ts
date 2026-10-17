@@ -20,6 +20,7 @@ import { authRoutes } from './modules/auth/routes'
 import { chatRoutes } from './modules/chat/routes'
 import { registerChatSocket } from './modules/chat/socket'
 import { healthRoutes } from './modules/health/routes'
+import { lostPetRoutes, publicTagRoutes } from './modules/lostPets/routes'
 import { matchingRoutes } from './modules/matching/routes'
 import { newsRoutes } from './modules/news/routes'
 import { notificationRoutes } from './modules/notifications/routes'
@@ -154,6 +155,8 @@ export async function buildApp({ env, db, storage }: BuildAppOptions) {
       await api.register(storeRoutes)
       await api.register(promotionRoutes, { prefix: '/promotions' })
       await api.register(notificationRoutes, { prefix: '/notifications' })
+      await api.register(lostPetRoutes)
+      await api.register(publicTagRoutes)
     },
     { prefix: '/api/v1' },
   )

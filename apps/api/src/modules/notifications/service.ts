@@ -18,9 +18,18 @@ const isTimeCursor = (value: unknown): value is TimeCursor =>
   typeof (value as TimeCursor).id === 'string' &&
   /^[0-9a-f-]{36}$/i.test((value as TimeCursor).id)
 
+const petPreviewSelect = {
+  select: {
+    name: true,
+    photos: { select: { storageKey: true }, orderBy: { position: 'asc' }, take: 1 },
+  },
+} as const
+
 const notificationInclude = {
   actor: { select: { id: true, name: true, avatarKey: true } },
   post: { select: { imageKey: true } },
+  pet: petPreviewSelect,
+  alert: { select: { pet: petPreviewSelect } },
 } satisfies Prisma.NotificationInclude
 
 type NotificationRow = Prisma.NotificationGetPayload<{ include: typeof notificationInclude }>
@@ -30,28 +39,39 @@ type NotificationRow = Prisma.NotificationGetPayload<{ include: typeof notificat
  * repetidamente não gera avisos duplicados.
  */
 export function createNotifier({ db, storage, realtime }: AppDeps) {
-  const toNotification = (row: NotificationRow): Notification => ({
-    id: row.id,
-    type: row.type,
-    actor: row.actor && {
-      id: row.actor.id,
-      name: row.actor.name,
-      avatarUrl: row.actor.avatarKey ? storage.publicUrl(row.actor.avatarKey) : null,
-    },
-    postId: row.postId,
-    postImageUrl: row.post ? storage.publicUrl(row.post.imageKey) : null,
-    matchId: row.matchId,
-    preview: row.preview,
-    read: row.readAt !== null,
-    createdAt: row.createdAt.toISOString(),
-  })
+  const toNotification = (row: NotificationRow): Notification => {
+    const pet = row.pet ?? row.alert?.pet ?? null
+    const petPhoto = pet?.photos[0]?.storageKey
+    return {
+      id: row.id,
+      type: row.type,
+      actor: row.actor && {
+        id: row.actor.id,
+        name: row.actor.name,
+        avatarUrl: row.actor.avatarKey ? storage.publicUrl(row.actor.avatarKey) : null,
+      },
+      postId: row.postId,
+      postImageUrl: row.post ? storage.publicUrl(row.post.imageKey) : null,
+      matchId: row.matchId,
+      petId: row.petId,
+      alertId: row.alertId,
+      petName: pet?.name ?? null,
+      petPhotoUrl: petPhoto ? storage.publicUrl(petPhoto) : null,
+      preview: row.preview,
+      read: row.readAt !== null,
+      createdAt: row.createdAt.toISOString(),
+    }
+  }
 
   async function create(data: {
     userId: string
-    actorId: string
+    /** Nulo quando quem agiu não tem conta (achou o pet pela plaquinha). */
+    actorId: string | null
     type: NotificationType
     postId?: string
     matchId?: string
+    petId?: string
+    alertId?: string
     preview?: string
   }) {
     if (data.userId === data.actorId) return
@@ -92,6 +112,52 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
     async matched(matchId: string, ownerA: string, ownerB: string) {
       await create({ userId: ownerA, actorId: ownerB, type: 'MATCH', matchId })
       await create({ userId: ownerB, actorId: ownerA, type: 'MATCH', matchId })
+    },
+
+    /** Avisa os vizinhos de um pet perdido de uma vez (sem um evento por linha no banco). */
+    async lostPetNearby(alertId: string, ownerId: string, userIds: string[], preview: string) {
+      const recipients = userIds.filter((id) => id !== ownerId)
+      if (recipients.length === 0) return
+      await db.notification.createMany({
+        data: recipients.map((userId) => ({
+          userId,
+          actorId: ownerId,
+          type: 'LOST_PET_NEARBY' as const,
+          alertId,
+          preview,
+        })),
+      })
+      const sample = await db.notification.findFirst({
+        where: { alertId, type: 'LOST_PET_NEARBY', userId: recipients[0] },
+        include: notificationInclude,
+      })
+      if (sample) {
+        // O payload só muda no destinatário (id da notificação), que o cliente não usa para exibir
+        realtime.toUsers(recipients, 'notification:new', toNotification(sample))
+      }
+    },
+
+    async petSighted(input: {
+      ownerId: string
+      reporterId: string | null
+      petId: string
+      alertId: string | null
+      message: string
+    }) {
+      await create({
+        userId: input.ownerId,
+        actorId: input.reporterId,
+        type: 'LOST_PET_SIGHTING',
+        petId: input.petId,
+        alertId: input.alertId ?? undefined,
+        preview: input.message.slice(0, PREVIEW_LENGTH),
+      })
+    },
+
+    async lostPetFound(alertId: string, ownerId: string, helperIds: string[]) {
+      for (const userId of new Set(helperIds)) {
+        await create({ userId, actorId: ownerId, type: 'LOST_PET_FOUND', alertId })
+      }
     },
 
     async list(

@@ -66,6 +66,8 @@ export const petSchema = z.object({
   photos: z.array(petPhotoSchema),
   /** Só a situação; o detalhe das vacinas é privado do tutor. */
   vaccineStatus: vaccineStatusSchema,
+  /** Alerta de pet perdido em aberto (público: quanto mais gente souber, melhor). */
+  activeAlertId: z.uuid().nullable(),
 })
 export type Pet = z.infer<typeof petSchema>
 

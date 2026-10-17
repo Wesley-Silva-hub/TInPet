@@ -17,6 +17,7 @@ export const petInclude = {
   breed: true,
   // Só a data do reforço: o detalhe das vacinas é privado do tutor
   vaccines: { select: { nextDueAt: true } },
+  lostAlerts: { where: { status: 'ACTIVE' }, select: { id: true }, take: 1 },
 } satisfies Prisma.PetInclude
 
 type PetWithRelations = Prisma.PetGetPayload<{ include: typeof petInclude }>
@@ -36,6 +37,7 @@ export function toPet(pet: PetWithRelations, storage: StorageProvider): Pet {
     purpose: pet.purpose,
     isActive: pet.isActive,
     vaccineStatus: vaccineStatusOf(pet.vaccines.map((vaccine) => vaccine.nextDueAt)),
+    activeAlertId: pet.lostAlerts[0]?.id ?? null,
     photos: pet.photos.map((photo) => ({
       id: photo.id,
       url: storage.publicUrl(photo.storageKey),
