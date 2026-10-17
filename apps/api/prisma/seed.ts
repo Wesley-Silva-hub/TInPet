@@ -288,6 +288,74 @@ async function main() {
     },
   })
 
+  // Pet perdido de demonstração: a Mel sumiu no Ininga, com dois avistamentos
+  const camila = userIds.get('camila') as string
+  const melId = petIds.get('mel') as string
+  const lostMel = await db.lostPetAlert.create({
+    data: {
+      petId: melId,
+      ownerId: camila,
+      description:
+        'Labradora caramelo, coleira azul com plaquinha. É dócil, mas assusta com moto. Atende por "Mel".',
+      rewardCents: 20000,
+      neighborhood: 'Ininga',
+      latitude: roundCoordinate(-5.0556),
+      longitude: roundCoordinate(-42.7945),
+      lastSeenAt: new Date(now - 3 * 3_600_000),
+      createdAt: new Date(now - 2.5 * 3_600_000),
+    },
+  })
+  const sightings = [
+    [
+      'julia',
+      'Vi uma labradora caramelo correndo perto da UFPI, ia em direção à Av. Universitária.',
+      -5.058,
+      -42.799,
+      100,
+    ],
+    [
+      'sofia',
+      'Acho que é ela! Estava bebendo água na praça aqui do Ininga agora há pouco.',
+      -5.054,
+      -42.793,
+      40,
+    ],
+  ] as const
+  for (const [reporter, message, latitude, longitude, minutesAgo] of sightings) {
+    await db.petSighting.create({
+      data: {
+        petId: melId,
+        alertId: lostMel.id,
+        reporterId: userIds.get(reporter) as string,
+        source: 'APP',
+        message,
+        latitude,
+        longitude,
+        createdAt: new Date(now - minutesAgo * 60_000),
+      },
+    })
+  }
+  const neighbors = owners
+    .filter(
+      (owner) => owner.key !== 'camila' && (owner.city === 'Teresina' || owner.city === 'Timon'),
+    )
+    .map((owner) => userIds.get(owner.key) as string)
+  await db.notification.createMany({
+    data: neighbors.map((userId) => ({
+      userId,
+      actorId: camila,
+      type: 'LOST_PET_NEARBY' as const,
+      alertId: lostMel.id,
+      preview: 'Mel sumiu perto de Ininga',
+      createdAt: new Date(now - 2.5 * 3_600_000),
+    })),
+  })
+  // Plaquinha QR do Bento pronta para testar em /p/BENTXK7Q
+  await db.pet.update({
+    where: { id: petIds.get('bento') as string },
+    data: { tagCode: 'BENTXK7Q' },
+  })
+
   for (const article of articles) {
     await db.article.create({
       data: {
