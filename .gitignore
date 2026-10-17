@@ -1,0 +1,53 @@
+# --- Dependências ---
+node_modules/
+.pnpm-store/
+
+# --- Builds ---
+dist/
+build/
+.vite/
+*.tsbuildinfo
+# Prisma Client gerado a partir do schema (recriado no install/build)
+apps/api/src/generated/
+
+# --- Variáveis de ambiente (só o exemplo é versionado) ---
+.env
+.env.*
+!.env.example
+
+# --- Logs ---
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# --- Testes ---
+coverage/
+.vitest/
+
+# --- Sistema operacional ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Editores ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --- Infra local ---
+/.data/
+*.dump
+*.sql.gz
+/backups/
+
+# --- Deploy ---
+.vercel/
+.turbo/
+
+# --- Claude Code (configuração pessoal) ---
+.claude/settings.local.json
+
+# --- Lockfiles concorrentes (o projeto usa só pnpm) ---
+package-lock.json
+yarn.lock

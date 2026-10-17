@@ -1,0 +1,31 @@
+# Infra de desenvolvimento local. Uso: docker compose up -d
+# Storage S3 local é opcional (perfil "storage"): docker compose --profile storage up -d
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: tinpet
+      POSTGRES_PASSWORD: tinpet
+      POSTGRES_DB: tinpet
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tinpet"]
+      interval: 5s
+      retries: 10
+
+  # Armazenamento compatível com S3 (substitui o MinIO, ver docs/adr/0003)
+  s3:
+    image: rustfs/rustfs:1.0.2
+    profiles: [storage]
+    environment:
+      RUSTFS_ACCESS_KEY: tinpet
+      RUSTFS_SECRET_KEY: tinpet-storage
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./.data/s3:/data
