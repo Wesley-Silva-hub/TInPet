@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { createMemoryRouter, RouterProvider } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { RouteError } from './RouteError'
@@ -29,7 +29,8 @@ describe('RouteError', () => {
     const { reloadForNewVersion } = await import('../lib/versionReload')
     renderFailingRoute(new TypeError('Failed to fetch dynamically imported module: /assets/a.js'))
     expect(await screen.findByText('Atualizando para a versão mais nova…')).toBeInTheDocument()
-    expect(reloadForNewVersion).toHaveBeenCalledTimes(1)
+    // O efeito que recarrega roda logo após a renderização: espera em vez de checar no mesmo instante
+    await waitFor(() => expect(reloadForNewVersion).toHaveBeenCalledTimes(1))
   })
 
   it('outros erros: mensagem amigável, sem detalhes técnicos, com saídas', async () => {
