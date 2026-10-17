@@ -315,7 +315,7 @@ async function main() {
         latitude: roundCoordinate(company.lat),
         longitude: roundCoordinate(company.lng),
         city: company.city,
-        state: 'SP',
+        state: company.state,
         consentTermsAt: consentAt,
         consentLocationAt: consentAt,
         company: {
@@ -349,6 +349,9 @@ async function main() {
       if (promotion) {
         const { endsInHours, ...offer } = promotion
         const startsAt = new Date(now - 6 * 3_600_000)
+        // Números coerentes: cliques são uma fração das visualizações, cupons uma fração dos cliques
+        const viewers = everyone.filter(() => random() < 0.75)
+        const clicks = Math.max(1, Math.round(viewers.length * (0.15 + random() * 0.2)))
         const boosted = await db.promotion.create({
           data: {
             ...offer,
@@ -356,15 +359,12 @@ async function main() {
             productId: created.id,
             startsAt,
             endsAt: new Date(now + endsInHours * 3_600_000),
-            clicks: 8 + Math.floor(random() * 40),
-            couponReveals: offer.couponCode ? 3 + Math.floor(random() * 15) : 0,
+            clicks,
+            couponReveals: offer.couponCode ? Math.max(1, Math.round(clicks * 0.6)) : 0,
           },
         })
-        // Visualizações dos tutores de demonstração para o painel não começar zerado
         await db.promotionImpression.createMany({
-          data: everyone
-            .filter(() => random() < 0.75)
-            .map((userId) => ({ promotionId: boosted.id, userId, day: startsAt })),
+          data: viewers.map((userId) => ({ promotionId: boosted.id, userId, day: startsAt })),
         })
         promotionCount++
       }
