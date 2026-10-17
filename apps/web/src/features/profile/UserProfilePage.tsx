@@ -9,7 +9,7 @@ import {
 } from '@tinpet/shared'
 import { Ban, Flag } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
+import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
 import { Avatar } from '../../components/ui/Avatar'
 import { Button } from '../../components/ui/Button'
@@ -49,22 +49,29 @@ export function UserProfilePage() {
         </h2>
         <ul className="grid gap-4 sm:grid-cols-2">
           {pets.map((pet) => (
-            <li key={pet.id} className="overflow-hidden rounded-card border border-line bg-surface">
-              {pet.photos[0] && (
-                <img
-                  src={pet.photos[0].url}
-                  alt={`Foto de ${pet.name}`}
-                  className="aspect-[4/3] w-full object-cover"
-                />
-              )}
-              <div className="p-4">
-                <h3 className="text-xl font-semibold">{pet.name}</h3>
-                <p className="text-sm text-muted">
-                  {speciesLabels[pet.species]}
-                  {pet.breed && ` · ${pet.breed}`} · {purposeLabels[pet.purpose]}
-                </p>
-                {pet.bio && <p className="mt-2">{pet.bio}</p>}
-              </div>
+            <li key={pet.id}>
+              <Link
+                to={`/pets/${pet.id}`}
+                className="group block h-full overflow-hidden rounded-card border border-line bg-surface transition hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                {pet.photos[0] && (
+                  <div className="overflow-hidden">
+                    <img
+                      src={pet.photos[0].url}
+                      alt={`Foto de ${pet.name}`}
+                      className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                )}
+                <div className="p-4">
+                  <h3 className="text-xl font-semibold">{pet.name}</h3>
+                  <p className="text-sm text-muted">
+                    {speciesLabels[pet.species]}
+                    {pet.breed && ` · ${pet.breed}`} · {purposeLabels[pet.purpose]}
+                  </p>
+                  {pet.bio && <p className="mt-2 line-clamp-2">{pet.bio}</p>}
+                </div>
+              </Link>
             </li>
           ))}
         </ul>

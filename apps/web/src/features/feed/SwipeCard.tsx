@@ -1,5 +1,5 @@
 import { type FeedItem, purposeLabels, sexLabels, sizeLabels } from '@tinpet/shared'
-import { MapPin } from 'lucide-react'
+import { MapPin, ShieldCheck, Sparkles } from 'lucide-react'
 import { type PointerEvent as ReactPointerEvent, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { Avatar } from '../../components/ui/Avatar'
@@ -25,7 +25,8 @@ interface SwipeCardProps {
 
 /** Cartão arrastável: pointer events cobrem mouse, toque e caneta. */
 export function SwipeCard({ item, leaving, onSwipe }: SwipeCardProps) {
-  const { pet, owner, distanceKm } = item
+  const { pet, owner, distanceKm, affinity } = item
+  const vaccinated = pet.vaccineStatus === 'UP_TO_DATE' || pet.vaccineStatus === 'DUE_SOON'
   const [dx, setDx] = useState(0)
   const [dragging, setDragging] = useState(false)
   const [photoIndex, setPhotoIndex] = useState(0)
@@ -141,8 +142,13 @@ export function SwipeCard({ item, leaving, onSwipe }: SwipeCardProps) {
         </span>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-5 pt-24 text-white">
+          <p className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-brand-500 px-3 py-1 text-sm font-bold">
+            <Sparkles className="size-4" aria-hidden /> {affinity.score}% de afinidade
+          </p>
           <h2 className="text-3xl font-semibold">
-            {pet.name}
+            <Link to={`/pets/${pet.id}`} className="pointer-events-auto hover:underline">
+              {pet.name}
+            </Link>
             {age && <span className="ml-2 text-xl font-normal opacity-90">{age}</span>}
           </h2>
           <p className="mt-1 text-sm opacity-90">
@@ -155,7 +161,15 @@ export function SwipeCard({ item, leaving, onSwipe }: SwipeCardProps) {
                 <MapPin className="size-3.5" aria-hidden /> a {distanceKm} km
               </span>
             )}
+            {vaccinated && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-leaf-500/90 px-3 py-1 font-semibold">
+                <ShieldCheck className="size-3.5" aria-hidden /> Vacinas em dia
+              </span>
+            )}
           </div>
+          {affinity.reasons.length > 0 && (
+            <p className="mt-2 text-sm opacity-90">{affinity.reasons.join(' · ')}</p>
+          )}
           {pet.bio && <p className="mt-3 line-clamp-2">{pet.bio}</p>}
           <Link
             to={`/usuarios/${owner.id}`}

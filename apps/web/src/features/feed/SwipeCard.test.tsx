@@ -19,6 +19,7 @@ const item: FeedItem = {
     purpose: 'BOTH',
     isActive: true,
     photos: [],
+    vaccineStatus: 'UP_TO_DATE',
   },
   owner: {
     id: '22222222-2222-4222-8222-222222222222',
@@ -32,6 +33,7 @@ const item: FeedItem = {
     profession: null,
   },
   distanceKm: 4,
+  affinity: { score: 87, reasons: ['Mesmo porte', 'Bem pertinho'] },
 }
 
 function renderCard(onSwipe = vi.fn()) {

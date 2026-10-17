@@ -8,16 +8,21 @@ import type { Comment, LikeResult, Page, Post } from '@tinpet/shared'
 import { toast } from 'sonner'
 import { api, errorMessage } from '../../lib/api'
 
-export const postsKey = (authorId?: string) => ['posts', authorId ?? 'all'] as const
+export interface PostsFilter {
+  authorId?: string
+  petId?: string
+}
+
+export const postsKey = (filter: PostsFilter = {}) => ['posts', filter] as const
 export const commentsKey = (postId: string) => ['comments', postId] as const
 
 type Feed = InfiniteData<Page<Post>>
 
-export function usePosts(authorId?: string) {
+export function usePosts(filter: PostsFilter = {}) {
   return useInfiniteQuery({
-    queryKey: postsKey(authorId),
+    queryKey: postsKey(filter),
     queryFn: ({ pageParam }) =>
-      api<Page<Post>>('/posts', { query: { authorId, cursor: pageParam, limit: 8 } }),
+      api<Page<Post>>('/posts', { query: { ...filter, cursor: pageParam, limit: 8 } }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   })

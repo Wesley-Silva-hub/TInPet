@@ -1,4 +1,5 @@
 import {
+  Bell,
   Flame,
   House,
   type LucideIcon,
@@ -10,9 +11,10 @@ import {
   Store,
   UserRound,
 } from 'lucide-react'
-import { motion, useReducedMotion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import { Logo } from '../components/Logo'
+import { useUnreadCount } from '../features/notifications/queries'
 import { useMe } from '../lib/auth'
 import { useRealtime } from './useRealtime'
 
@@ -41,6 +43,39 @@ const companyTabs: NavItem[] = [
   { to: '/noticias', label: 'Notícias', icon: Newspaper },
   { to: '/configuracoes', label: 'Conta', icon: Settings },
 ]
+
+const iconLinkClass =
+  (extra = '') =>
+  ({ isActive }: { isActive: boolean }) =>
+    `relative rounded-full p-2.5 transition ${extra} ${
+      isActive ? 'bg-brand-100 text-brand-700' : 'text-ink hover:bg-surface-2'
+    }`
+
+/** Sininho com contador de não lidas, atualizado em tempo real pelo socket. */
+function NotificationBell() {
+  const unread = useUnreadCount().data?.unread ?? 0
+  const label = unread > 0 ? `Notificações, ${unread} não lidas` : 'Notificações'
+  return (
+    <NavLink to="/notificacoes" aria-label={label} className={iconLinkClass()}>
+      <Bell className="size-6" aria-hidden />
+      <AnimatePresence>
+        {unread > 0 && (
+          <motion.span
+            key={unread}
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            exit={{ scale: 0 }}
+            transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+            className="absolute top-1 right-1 grid h-5 min-w-5 place-items-center rounded-full bg-brand-500 px-1 text-[11px] font-bold text-white"
+            aria-hidden
+          >
+            {unread > 99 ? '99+' : unread}
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </NavLink>
+  )
+}
 
 /** Casca do app logado: cabeçalho no topo, barra inferior no celular e transição entre telas. */
 export function AppLayout() {
@@ -85,19 +120,13 @@ export function AppLayout() {
             ))}
           </nav>
           {isOwner && (
-            <nav aria-label="Atalhos" className="flex gap-1 lg:hidden">
+            <nav aria-label="Atalhos" className="flex items-center gap-1">
               {ownerExtras.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  aria-label={label}
-                  className={({ isActive }) =>
-                    `rounded-full p-2.5 transition ${isActive ? 'bg-brand-100 text-brand-700' : 'text-ink hover:bg-surface-2'}`
-                  }
-                >
+                <NavLink key={to} to={to} aria-label={label} className={iconLinkClass('lg:hidden')}>
                   <Icon className="size-6" aria-hidden />
                 </NavLink>
               ))}
+              <NotificationBell />
             </nav>
           )}
         </div>

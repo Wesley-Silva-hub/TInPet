@@ -23,6 +23,7 @@ import { ErrorState, LoadingState } from '../../components/ui/States'
 import { api, errorMessage } from '../../lib/api'
 import { PetPhotos } from './PetPhotos'
 import { useInvalidateMyPets, useLookups } from './queries'
+import { VaccineCard } from './VaccineCard'
 
 const toNullableNumber = (value: string) => (value === '' ? null : Number(value))
 const toNullableString = (value: string) => (value === '' ? null : value)
@@ -127,6 +128,7 @@ function PetForm({ pet, breeds: allBreeds }: { pet: Pet | undefined; breeds: Bre
     <div className="mx-auto flex max-w-lg flex-col gap-6">
       <PageHeader title={pet ? `Editar ${pet.name}` : 'Novo pet'} />
       {pet && <PetPhotos pet={pet} />}
+      {pet && <VaccineCard petId={pet.id} petName={pet.name} />}
       <form onSubmit={save} noValidate className="flex flex-col gap-4">
         <Field label="Nome" error={errors.name?.message}>
           {(props) => <input {...props} {...form.register('name')} />}

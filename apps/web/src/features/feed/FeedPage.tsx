@@ -10,6 +10,15 @@ import { api, errorMessage } from '../../lib/api'
 import { useMe } from '../../lib/auth'
 import { matchesKey } from '../../routes/useRealtime'
 import { useMyPets } from '../profile/queries'
+import {
+  activeFilterCount,
+  type FeedFilters,
+  FiltersButton,
+  FiltersSheet,
+  filtersToQuery,
+  loadFilters,
+  saveFilters,
+} from './FeedFilters'
 import { SwipeCard } from './SwipeCard'
 
 const SELECTED_PET_KEY = 'tinpet:feed-pet'
@@ -67,12 +76,36 @@ export function FeedPage() {
           </select>
         </label>
       )}
-      <Deck key={pet.id} pet={pet} />
+      <PetDeck key={pet.id} pet={pet} />
     </div>
   )
 }
 
-function Deck({ pet }: { pet: Pet }) {
+/** Filtros do pet selecionado; mudar os filtros recomeça o baralho. */
+function PetDeck({ pet }: { pet: Pet }) {
+  const [filters, setFilters] = useState(() => loadFilters(pet.id))
+  const [open, setOpen] = useState(false)
+  const closeSheet = useCallback(() => setOpen(false), [])
+  return (
+    <>
+      <div className="flex justify-end">
+        <FiltersButton count={activeFilterCount(filters)} onClick={() => setOpen(true)} />
+      </div>
+      <Deck key={JSON.stringify(filters)} pet={pet} filters={filters} />
+      <FiltersSheet
+        open={open}
+        value={filters}
+        onClose={closeSheet}
+        onApply={(next) => {
+          setFilters(next)
+          saveFilters(pet.id, next)
+        }}
+      />
+    </>
+  )
+}
+
+function Deck({ pet, filters }: { pet: Pet; filters: FeedFilters }) {
   const me = useMe()
   const queryClient = useQueryClient()
   const [index, setIndex] = useState(0)
@@ -80,9 +113,11 @@ function Deck({ pet }: { pet: Pet }) {
   const [match, setMatch] = useState<MatchSummary | null>(null)
 
   const feed = useInfiniteQuery({
-    queryKey: ['feed', pet.id],
+    queryKey: ['feed', pet.id, filters],
     queryFn: ({ pageParam }) =>
-      api<Page<FeedItem>>('/feed', { query: { petId: pet.id, cursor: pageParam, limit: 10 } }),
+      api<Page<FeedItem>>('/feed', {
+        query: { petId: pet.id, cursor: pageParam, limit: 10, ...filtersToQuery(filters) },
+      }),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
     staleTime: Number.POSITIVE_INFINITY,

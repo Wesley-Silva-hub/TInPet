@@ -123,7 +123,7 @@ function MyPets() {
         {pets.data?.map((pet) => (
           <li key={pet.id} className="shrink-0">
             <Link
-              to={`/pets/${pet.id}/editar`}
+              to={`/pets/${pet.id}`}
               className="flex w-28 flex-col items-center gap-2 text-center"
             >
               <span className={`relative ${pet.isActive ? '' : 'opacity-50'}`}>
