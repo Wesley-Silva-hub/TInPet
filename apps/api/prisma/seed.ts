@@ -303,6 +303,7 @@ async function main() {
     })
   }
 
+  let promotionCount = 0
   for (const company of companies) {
     const user = await db.user.create({
       data: {
@@ -311,21 +312,28 @@ async function main() {
         name: company.name,
         birthDate: new Date('1985-01-01T00:00:00Z'),
         role: 'COMPANY',
-        city: 'São Paulo',
+        latitude: roundCoordinate(company.lat),
+        longitude: roundCoordinate(company.lng),
+        city: company.city,
         state: 'SP',
         consentTermsAt: consentAt,
+        consentLocationAt: consentAt,
         company: {
           create: {
             tradeName: company.tradeName,
             cnpj: company.cnpj,
             phone: company.phone,
             website: company.website,
+            kind: company.kind,
+            description: company.description,
+            neighborhood: company.neighborhood,
+            delivers: company.delivers,
           },
         },
       },
     })
     for (const [index, product] of company.products.entries()) {
-      const { image, ...data } = product
+      const { image, promotion, ...data } = product
       const created = await db.product.create({
         data: {
           ...data,
@@ -338,11 +346,33 @@ async function main() {
         where: { id: created.id },
         data: { imageKey: await upload(`products/${created.id}`, image) },
       })
+      if (promotion) {
+        const { endsInHours, ...offer } = promotion
+        const startsAt = new Date(now - 6 * 3_600_000)
+        const boosted = await db.promotion.create({
+          data: {
+            ...offer,
+            companyId: user.id,
+            productId: created.id,
+            startsAt,
+            endsAt: new Date(now + endsInHours * 3_600_000),
+            clicks: 8 + Math.floor(random() * 40),
+            couponReveals: offer.couponCode ? 3 + Math.floor(random() * 15) : 0,
+          },
+        })
+        // Visualizações dos tutores de demonstração para o painel não começar zerado
+        await db.promotionImpression.createMany({
+          data: everyone
+            .filter(() => random() < 0.75)
+            .map((userId) => ({ promotionId: boosted.id, userId, day: startsAt })),
+        })
+        promotionCount++
+      }
     }
   }
 
   process.stdout.write(
-    `Seed concluído: ${owners.length} tutores, ${petIds.size} pets, ${postIds.length} posts, ${articles.length} artigos, ${companies.length} empresas. Senha: tinpet123\n`,
+    `Seed concluído: ${owners.length} tutores, ${petIds.size} pets, ${postIds.length} posts, ${articles.length} artigos, ${companies.length} lojas, ${promotionCount} ofertas no ar. Senha: tinpet123\n`,
   )
 }
 

@@ -4,6 +4,7 @@
  */
 import type {
   ArticleCategory,
+  CompanyKind,
   PetPurpose,
   PetSex,
   PetSize,
@@ -1013,21 +1014,42 @@ Fique de olho na aba de notícias do TinPet: vamos divulgar eventos de parceiros
   },
 ]
 
-export const companies: {
+export interface SeedPromotion {
+  headline: string
+  discountPercent: number | null
+  couponCode: string | null
+  species: Species[]
+  radiusKm: number
+  /** Horas até acabar (ofertas relâmpago têm poucas horas). */
+  endsInHours: number
+}
+
+export interface SeedCompany {
   name: string
   email: string
   tradeName: string
   cnpj: string
   phone: string
   website: string | null
+  kind: CompanyKind
+  description: string
+  city: string
+  neighborhood: string
+  lat: number
+  lng: number
+  delivers: boolean
   products: {
     title: string
     priceCents: number
     category: ProductCategory
     description: string
     image: string
+    species: Species[]
+    promotion?: SeedPromotion
   }[]
-}[] = [
+}
+
+export const companies: SeedCompany[] = [
   {
     name: 'Ana Paula Ferreira',
     email: 'pet',
@@ -1035,6 +1057,13 @@ export const companies: {
     cnpj: '12345678000190',
     phone: '(11) 98888-0001',
     website: 'https://example.com/petfeliz',
+    kind: 'PETSHOP',
+    description: 'Rações, petiscos e farmácia veterinária. Entrega no mesmo dia na zona oeste.',
+    city: 'São Paulo',
+    neighborhood: 'Pinheiros',
+    lat: -23.5657,
+    lng: -46.6844,
+    delivers: true,
     products: [
       {
         title: 'Ração Premium Cães Adultos 15 kg',
@@ -1043,6 +1072,15 @@ export const companies: {
         description:
           'Ração super premium com proteína de frango e arroz, sem corantes artificiais.',
         image: 'produto-racao',
+        species: ['DOG'],
+        promotion: {
+          headline: 'Ração do mês com 20% off',
+          discountPercent: 20,
+          couponCode: 'BENTO20',
+          species: ['DOG'],
+          radiusKm: 30,
+          endsInHours: 5,
+        },
       },
       {
         title: 'Antipulgas e carrapatos (3 doses)',
@@ -1050,13 +1088,15 @@ export const companies: {
         category: 'HEALTH',
         description: 'Proteção mensal para cães de 10 a 25 kg. Siga a orientação do veterinário.',
         image: 'produto-antipulgas',
+        species: ['DOG'],
       },
       {
-        title: 'Cama ortopédica para gatos',
+        title: 'Cama ortopédica para gatos idosos',
         priceCents: 12900,
         category: 'ACCESSORIES',
-        description: 'Espuma de alta densidade e capa lavável. Ideal para gatos idosos.',
+        description: 'Espuma de alta densidade e capa lavável. Ideal para gatos sênior.',
         image: 'produto-cama',
+        species: ['CAT'],
       },
     ],
   },
@@ -1067,6 +1107,13 @@ export const companies: {
     cnpj: '98765432000110',
     phone: '(11) 97777-0002',
     website: null,
+    kind: 'STORE',
+    description: 'Coleiras, roupinhas e brinquedos resistentes. Atendimento pelo WhatsApp.',
+    city: 'São Paulo',
+    neighborhood: 'Vila Madalena',
+    lat: -23.5531,
+    lng: -46.6912,
+    delivers: false,
     products: [
       {
         title: 'Peitoral acolchoado anti-puxão',
@@ -1074,6 +1121,15 @@ export const companies: {
         category: 'ACCESSORIES',
         description: 'Ajuste em 4 pontos, tecido respirável e faixa refletiva.',
         image: 'produto-peitoral',
+        species: ['DOG'],
+        promotion: {
+          headline: 'Passeio sem puxão: 15% off',
+          discountPercent: 15,
+          couponCode: null,
+          species: ['DOG'],
+          radiusKm: 15,
+          endsInHours: 72,
+        },
       },
       {
         title: 'Moletom para cães (P ao GG)',
@@ -1081,6 +1137,7 @@ export const companies: {
         category: 'ACCESSORIES',
         description: 'Algodão macio com capuz. Perfeito para os dias frios.',
         image: 'produto-moletom',
+        species: ['DOG'],
       },
       {
         title: 'Brinquedo bola com corda',
@@ -1088,6 +1145,7 @@ export const companies: {
         category: 'TOYS',
         description: 'Borracha atóxica resistente, ótima para cabo de guerra.',
         image: 'produto-brinquedo',
+        species: ['DOG'],
       },
       {
         title: 'Guia retrátil 5 m',
@@ -1095,13 +1153,130 @@ export const companies: {
         category: 'ACCESSORIES',
         description: 'Trava de segurança e empunhadura emborrachada.',
         image: 'produto-guia',
+        species: ['DOG'],
       },
+    ],
+  },
+  {
+    name: 'Juliana Prado',
+    email: 'bichochic',
+    tradeName: 'Bicho Chic Banho & Tosa',
+    cnpj: '45678912000133',
+    phone: '(11) 96666-0003',
+    website: null,
+    kind: 'GROOMING',
+    description: 'Banho, tosa e hidratação com hora marcada. Leva e traz o seu pet.',
+    city: 'São Paulo',
+    neighborhood: 'Moema',
+    lat: -23.6004,
+    lng: -46.6658,
+    delivers: true,
+    products: [
       {
         title: 'Banho e tosa (agendamento)',
         priceCents: 6000,
         category: 'SERVICES',
-        description: 'Atendimento com hora marcada em Pinheiros. Produtos hipoalergênicos.',
+        description: 'Produtos hipoalergênicos e secagem sem barulho para pets ansiosos.',
         image: 'produto-banho',
+        species: ['DOG', 'CAT'],
+        promotion: {
+          headline: 'Primeiro banho com 30% off',
+          discountPercent: 30,
+          couponCode: 'PRIMEIROBANHO',
+          species: [],
+          radiusKm: 20,
+          endsInHours: 2,
+        },
+      },
+      {
+        title: 'Hidratação de pelagem',
+        priceCents: 4500,
+        category: 'SERVICES',
+        description: 'Para pelos longos e ressecados. Duração de 40 minutos.',
+        image: 'produto-banho',
+        species: ['DOG', 'CAT'],
+      },
+    ],
+  },
+  {
+    name: 'Marcos Tanaka',
+    email: 'casadogato',
+    tradeName: 'Casa do Gato',
+    cnpj: '32165498000144',
+    phone: '(11) 95555-0004',
+    website: null,
+    kind: 'STORE',
+    description: 'Tudo para felinos: arranhadores, caminhas e brinquedos de enriquecimento.',
+    city: 'São Paulo',
+    neighborhood: 'Perdizes',
+    lat: -23.5362,
+    lng: -46.6777,
+    delivers: true,
+    products: [
+      {
+        title: 'Caminha nuvem para gatos',
+        priceCents: 9900,
+        category: 'ACCESSORIES',
+        description: 'Pelúcia macia, base antiderrapante e lavável na máquina.',
+        image: 'produto-cama',
+        species: ['CAT'],
+        promotion: {
+          headline: 'Caminha nuvem: 25% off hoje',
+          discountPercent: 25,
+          couponCode: 'MIAU25',
+          species: ['CAT'],
+          radiusKm: 25,
+          endsInHours: 9,
+        },
+      },
+      {
+        title: 'Varinha com penas e guizo',
+        priceCents: 2490,
+        category: 'TOYS',
+        description: 'Estimula o instinto de caça. Uso sempre com supervisão.',
+        image: 'produto-brinquedo',
+        species: ['CAT'],
+      },
+    ],
+  },
+  {
+    name: 'Fernanda Lopes',
+    email: 'clinicavida',
+    tradeName: 'Clínica Vet Vida',
+    cnpj: '74185296000155',
+    phone: '(19) 94444-0005',
+    website: null,
+    kind: 'VET_CLINIC',
+    description: 'Consultas, vacinas e check-up para cães, gatos e pets exóticos.',
+    city: 'Campinas',
+    neighborhood: 'Cambuí',
+    lat: -22.8949,
+    lng: -47.0539,
+    delivers: false,
+    products: [
+      {
+        title: 'Check-up completo com exames',
+        priceCents: 28000,
+        category: 'SERVICES',
+        description: 'Consulta, hemograma e avaliação odontológica. Recomendado para pets idosos.',
+        image: 'produto-antipulgas',
+        species: [],
+        promotion: {
+          headline: 'Check-up sênior com 10% off',
+          discountPercent: 10,
+          couponCode: 'VIDA10',
+          species: [],
+          radiusKm: 40,
+          endsInHours: 168,
+        },
+      },
+      {
+        title: 'Vacina V10 (aplicação)',
+        priceCents: 9500,
+        category: 'HEALTH',
+        description: 'Aplicação com registro na carteirinha de vacinação.',
+        image: 'produto-antipulgas',
+        species: ['DOG'],
       },
     ],
   },
