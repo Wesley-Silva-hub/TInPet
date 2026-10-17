@@ -104,6 +104,9 @@ export function createUserService({ db, storage }: AppDeps) {
           pets: { include: { ...petInclude, swipesMade: true } },
           products: true,
           messages: { orderBy: { createdAt: 'asc' } },
+          posts: { orderBy: { createdAt: 'asc' } },
+          postComments: { orderBy: { createdAt: 'asc' } },
+          postLikes: { select: { postId: true, createdAt: true } },
           blocksMade: { select: { blockedId: true, createdAt: true } },
           reportsMade: {
             select: { reportedId: true, reason: true, details: true, createdAt: true },
@@ -138,6 +141,18 @@ export function createUserService({ db, storage }: AppDeps) {
           content: message.content,
           createdAt: message.createdAt.toISOString(),
         })),
+        posts: user.posts.map((post) => ({
+          id: post.id,
+          caption: post.caption,
+          imageUrl: storage.publicUrl(post.imageKey),
+          createdAt: post.createdAt.toISOString(),
+        })),
+        comments: user.postComments.map((comment) => ({
+          postId: comment.postId,
+          content: comment.content,
+          createdAt: comment.createdAt.toISOString(),
+        })),
+        likes: user.postLikes,
         blocks: user.blocksMade,
         reports: user.reportsMade,
       }
@@ -150,6 +165,7 @@ export function createUserService({ db, storage }: AppDeps) {
         include: {
           pets: { select: { photos: { select: { storageKey: true } } } },
           products: { select: { imageKey: true } },
+          posts: { select: { imageKey: true } },
         },
       })
       if (!user) throw notFound('Usuário')
@@ -160,9 +176,10 @@ export function createUserService({ db, storage }: AppDeps) {
         user.avatarKey,
         ...user.pets.flatMap((pet) => pet.photos.map((photo) => photo.storageKey)),
         ...user.products.map((product) => product.imageKey),
+        ...user.posts.map((post) => post.imageKey),
       ].filter((key): key is string => Boolean(key))
 
-      // Cascata no banco remove pets, fotos, swipes, matches, mensagens, produtos e tokens
+      // Cascata no banco remove pets, fotos, swipes, matches, mensagens, produtos, posts e tokens
       await db.user.delete({ where: { id: userId } })
       await storage.delete(keys)
     },
