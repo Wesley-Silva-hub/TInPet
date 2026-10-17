@@ -71,7 +71,7 @@ BACKUP_RETENTION_DAYS=14
   corepack enable && pnpm install --frozen-lockfile && pnpm --filter @tinpet/web build
   ```
   (Ou gere o build no seu computador/CI e copie a pasta `apps/web/dist` com `rsync`.)
-- **B. Front continua na Vercel:** em `apps/web/vercel.json`, aponte o rewrite para `https://<APP_DOMAIN>/api/:path*` e defina `VITE_SOCKET_URL=https://<APP_DOMAIN>` na Vercel. Inclua a URL da Vercel em `CORS_ORIGINS`.
+- **B. Front continua no Netlify:** no `netlify.toml`, aponte o redirect de `/api/*` para `https://<APP_DOMAIN>/api/:splat` e defina `VITE_SOCKET_URL=https://<APP_DOMAIN>` no Netlify. Inclua a URL do Netlify em `CORS_ORIGINS`.
 
 ## 4. Subir
 

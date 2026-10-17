@@ -1,0 +1,31 @@
+# Front (apps/web) no Netlify. Guia: docs/deploy-gratuito.md
+[build]
+  # Roda na raiz do monorepo (pnpm workspace)
+  command = "pnpm --filter @tinpet/web build"
+  publish = "apps/web/dist"
+  # Plano grátis: cada deploy de produção gasta créditos; pula o build se o front não mudou
+  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF -- apps/web packages/shared pnpm-lock.yaml netlify.toml"
+
+[build.environment]
+  NODE_VERSION = "22"
+  # Não instala hooks de git no servidor de build
+  LEFTHOOK = "0"
+
+# API no Render pela mesma origem (o cookie de sessão fica first-party).
+# Troque pela URL real do serviço no Render.
+[[redirects]]
+  from = "/api/*"
+  to = "https://tinpet-api.onrender.com/api/:splat"
+  status = 200
+  force = true
+
+# SPA: qualquer outra rota cai no index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

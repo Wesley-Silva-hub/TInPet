@@ -11,7 +11,7 @@ Cada pessoa é **dona** de um módulo (revisa os PRs dele e conhece as regras), 
 | 1 | Auth, perfil, LGPD, configurações | `api/modules/{auth,users}`, `web/features/{auth,profile}` |
 | 2 | Pets, feed, swipe, match, segurança (bloqueio/denúncia) | `api/modules/{pets,matching,safety}`, `web/features/feed` |
 | 3 | Chat e tempo real | `api/modules/chat`, `api/shared/realtime.ts`, `web/features/{matches,chat}` |
-| 4 | Marketplace, infra e deploy (CI, Render, Vercel, VPS) | `api/modules/products`, `web/features/marketplace`, `docs/deploy-*`, `.github/` |
+| 4 | Marketplace, infra e deploy (CI, Render, Netlify, VPS) | `api/modules/products`, `web/features/marketplace`, `docs/deploy-*`, `.github/` |
 
 ## Issues
 
@@ -22,7 +22,7 @@ Labels sugeridas: `infra`, `api`, `web`, `segurança`, `lgpd`, `ux`, `futuro`. M
 1. **[infra] Proteger a branch `main` e renomear `producao`** — Renomear a branch padrão para `main`; exigir PR, CI verde e 1 aprovação; habilitar squash merge e apagar branches após o merge. *Aceite:* push direto na `main` é bloqueado.
 2. **[infra] Criar projeto Supabase e bucket** — Seguir [deploy-gratuito.md](deploy-gratuito.md) §1. *Aceite:* strings do pooler e secret key guardadas no gerenciador de senhas do time.
 3. **[infra] Publicar a API no Render via Blueprint** — §2. *Aceite:* `/api/v1/health` responde `ok`.
-4. **[infra] Publicar o front na Vercel** — §3, incluindo `VITE_SOCKET_URL` e `CORS_ORIGINS`. *Aceite:* fluxo completo de match e chat em produção.
+4. **[infra] Publicar o front no Netlify** — §3, incluindo `VITE_SOCKET_URL` e `CORS_ORIGINS`. *Aceite:* fluxo completo de match e chat em produção.
 5. **[infra] Monitor de uptime** — Configurar um monitor gratuito chamando `/api/v1/health` a cada 10 min (evita hibernação e pausa do Supabase). *Aceite:* alerta por e-mail quando cair.
 6. **[web] Testar em celulares reais** — iOS Safari e Android Chrome: swipe, upload de foto pela câmera, chat com teclado aberto. *Aceite:* bugs encontrados viram issues.
 7. **[web][ux] Revisão de acessibilidade** — Navegação só por teclado, leitor de tela (NVDA/VoiceOver) e contraste no tema escuro. *Aceite:* nenhum bloqueio nas telas principais.

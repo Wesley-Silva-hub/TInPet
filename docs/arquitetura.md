@@ -5,7 +5,7 @@
 ```mermaid
 flowchart LR
   subgraph Navegador
-    W[Web React<br/>Vercel]
+    W[Web React<br/>Netlify]
   end
   W -- "HTTP /api/* (rewrite, mesma origem)" --> A
   W -- "WebSocket (VITE_SOCKET_URL)" --> A

@@ -38,4 +38,4 @@ Antes de dizer que terminou: `pnpm lint && pnpm typecheck && pnpm test`.
 
 - Prisma 7: o client é gerado em `apps/api/src/generated` (`pnpm install` já roda `prisma generate`) e a URL das migrations vem de `prisma.config.ts` (`DIRECT_URL` ou `DATABASE_URL`).
 - Não coloque `NODE_ENV` no `.env`: o Vite lê o mesmo arquivo e geraria o React de desenvolvimento no build.
-- WebSocket não passa pelo rewrite da Vercel: em produção o front usa `VITE_SOCKET_URL` apontando para a API.
+- WebSocket não passa pelo proxy do Netlify (`netlify.toml`): em produção o front usa `VITE_SOCKET_URL` apontando para a API.

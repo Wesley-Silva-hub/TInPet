@@ -8,6 +8,6 @@ Socket.IO no mesmo processo da API (`path: /api/socket.io`), em vez do Supabase 
 
 ## Consequências
 
-- **Rewrites da Vercel não encaminham WebSocket.** Em produção gratuita o front conecta direto na URL do Render (`VITE_SOCKET_URL`), autenticando pelo token (não depende de cookie). A origem do front precisa estar em `CORS_ORIGINS`.
+- **O proxy do Netlify não garante WebSocket** (e corta requisições em 26 s). Em produção gratuita o front conecta direto na URL do Render (`VITE_SOCKET_URL`), autenticando pelo token (não depende de cookie). A origem do front precisa estar em `CORS_ORIGINS`.
 - Uma única instância da API basta nesta fase. Para várias instâncias, adicionar o adapter Redis do Socket.IO.
 - O plano grátis do Render hiberna sem tráfego; a primeira conexão após a hibernação demora cerca de 1 minuto.

@@ -8,7 +8,7 @@ let socket: AppSocket | null = null
 
 /**
  * Conexão única com o Socket.IO da API. Em produção a API pode estar em outro domínio
- * (VITE_SOCKET_URL), pois rewrites da Vercel não encaminham WebSocket.
+ * (VITE_SOCKET_URL): o proxy do Netlify não garante WebSocket e corta requisições em 26 s.
  */
 export function connectSocket(): AppSocket {
   if (socket) return socket

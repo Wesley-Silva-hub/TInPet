@@ -20,7 +20,7 @@ O TinPet é uma aplicação web que conecta tutores de animais de estimação: o
 | API | Fastify 5 · Zod · Prisma 7 (PostgreSQL) · Socket.IO · pino |
 | Web | React 19 · Vite · Tailwind CSS 4 · TanStack Query · React Hook Form · React Router |
 | Qualidade | Biome · Vitest · Lefthook + commitlint · GitHub Actions |
-| Hospedagem (grátis) | Supabase (Postgres + Storage) · Render (API) · Vercel (web) |
+| Hospedagem (grátis) | Supabase (Postgres + Storage) · Render (API) · Netlify (web) |
 
 Decisões e diagramas: [docs/arquitetura.md](docs/arquitetura.md) e [docs/adr/](docs/adr/).
 
@@ -67,7 +67,7 @@ docs/           Arquitetura, ADRs, deploy e documentação original (docs/notion
 
 ## 🌍 Deploy
 
-- Grátis (Supabase + Render + Vercel): [docs/deploy-gratuito.md](docs/deploy-gratuito.md)
+- Grátis (Supabase + Render + Netlify): [docs/deploy-gratuito.md](docs/deploy-gratuito.md)
 - VPS própria com Docker: [docs/deploy-vps.md](docs/deploy-vps.md)
 
 ## 🏥 Ideias futuras
