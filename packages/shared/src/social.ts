@@ -41,6 +41,7 @@ export type Post = z.infer<typeof postSchema>
 
 export const postsQuerySchema = paginationQuerySchema.extend({
   authorId: z.uuid().optional(),
+  petId: z.uuid().optional(),
   limit: z.coerce.number().int().min(1).max(30).default(10),
 })
 export type PostsQuery = z.input<typeof postsQuerySchema>

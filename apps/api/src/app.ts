@@ -19,8 +19,10 @@ import { z } from 'zod'
 import { authRoutes } from './modules/auth/routes'
 import { chatRoutes } from './modules/chat/routes'
 import { registerChatSocket } from './modules/chat/socket'
+import { healthRoutes } from './modules/health/routes'
 import { matchingRoutes } from './modules/matching/routes'
 import { newsRoutes } from './modules/news/routes'
+import { notificationRoutes } from './modules/notifications/routes'
 import { petRoutes } from './modules/pets/routes'
 import { productRoutes } from './modules/products/routes'
 import { safetyRoutes } from './modules/safety/routes'
@@ -146,6 +148,8 @@ export async function buildApp({ env, db, storage }: BuildAppOptions) {
       await api.register(productRoutes, { prefix: '/products' })
       await api.register(socialRoutes)
       await api.register(newsRoutes)
+      await api.register(healthRoutes)
+      await api.register(notificationRoutes, { prefix: '/notifications' })
     },
     { prefix: '/api/v1' },
   )

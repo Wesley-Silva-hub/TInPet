@@ -124,6 +124,49 @@ describe('feed', () => {
   })
 })
 
+describe('filtros e afinidade', () => {
+  it('filtra por porte e idade e explica a afinidade', async () => {
+    const me = await registerOwner(ctx.app)
+    const near = await registerOwner(ctx.app)
+    await setLocation(ctx.app, me.token, -23.56, -46.65)
+    await setLocation(ctx.app, near.token, -23.57, -46.65)
+    const myPet = await createPet(ctx.app, me.token, { size: 'MEDIUM', birthDate: '2021-01-01' })
+    await createPet(ctx.app, near.token, { name: 'Gêmeo', size: 'MEDIUM', birthDate: '2021-06-01' })
+    await createPet(ctx.app, near.token, {
+      name: 'Grandão',
+      size: 'LARGE',
+      birthDate: '2015-01-01',
+    })
+    await createPet(ctx.app, near.token, { name: 'Sem idade', size: 'SMALL', birthDate: null })
+
+    const all = await feed(me.token, myPet.id)
+    const twin = all.items.find((item) => item.pet.name === 'Gêmeo')
+    const big = all.items.find((item) => item.pet.name === 'Grandão')
+    expect(twin?.affinity.reasons).toEqual(
+      expect.arrayContaining(['Mesmo porte', 'Idades parecidas', 'Bem pertinho']),
+    )
+    expect(twin?.affinity.score).toBeGreaterThan(big?.affinity.score ?? 100)
+
+    const medium = await feed(me.token, myPet.id, '&sizes=MEDIUM')
+    expect(medium.items.map((item) => item.pet.name)).toEqual(['Gêmeo'])
+    const young = await feed(me.token, myPet.id, '&maxAge=6')
+    expect(young.items.map((item) => item.pet.name)).toEqual(['Gêmeo'])
+    const senior = await feed(me.token, myPet.id, '&minAge=8')
+    expect(senior.items.map((item) => item.pet.name)).toEqual(['Grandão'])
+  })
+
+  it('recusa filtro malformado', async () => {
+    const me = await registerOwner(ctx.app)
+    const myPet = await createPet(ctx.app, me.token)
+    const response = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/v1/feed?petId=${myPet.id}&sizes=GIGANTE`,
+      headers: auth(me.token),
+    })
+    expect(response.statusCode).toBe(400)
+  })
+})
+
 describe('swipe e match', () => {
   it('cria match quando os dois lados curtem e lista para ambos', async () => {
     const ana = await registerOwner(ctx.app)

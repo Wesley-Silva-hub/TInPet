@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { isoDateSchema } from './common'
+import { vaccineStatusSchema } from './health'
 
 export const species = ['DOG', 'CAT', 'BIRD', 'RABBIT', 'RODENT', 'OTHER'] as const
 export const speciesSchema = z.enum(species)
@@ -63,6 +64,8 @@ export const petSchema = z.object({
   purpose: petPurposeSchema,
   isActive: z.boolean(),
   photos: z.array(petPhotoSchema),
+  /** Só a situação; o detalhe das vacinas é privado do tutor. */
+  vaccineStatus: vaccineStatusSchema,
 })
 export type Pet = z.infer<typeof petSchema>
 

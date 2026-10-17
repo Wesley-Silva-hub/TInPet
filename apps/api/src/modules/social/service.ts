@@ -15,8 +15,11 @@ import { decodeCursor, encodeCursor } from '../../shared/dto'
 import { badRequest, forbidden, notFound } from '../../shared/errors'
 import { processImage } from '../../shared/images'
 import { newStorageKey } from '../../shared/storage/storage'
+import { createNotifier } from '../notifications/service'
 
 const PREVIEW_COMMENTS = 2
+const TRENDING_DAYS = 7
+const TRENDING_LIMIT = 6
 
 interface TimeCursor {
   t: string
@@ -42,7 +45,9 @@ function visibleTo(viewerId: string): Prisma.UserWhereInput {
   }
 }
 
-export function createSocialService({ db, storage }: AppDeps) {
+export function createSocialService(deps: AppDeps) {
+  const { db, storage } = deps
+  const notifier = createNotifier(deps)
   const postInclude = (viewerId: string) =>
     ({
       author: authorSelect,
@@ -120,6 +125,7 @@ export function createSocialService({ db, storage }: AppDeps) {
       const rows = await db.post.findMany({
         where: {
           authorId: query.authorId,
+          petId: query.petId,
           author: visibleTo(user.id),
           ...(cursor && {
             OR: [
@@ -141,6 +147,20 @@ export function createSocialService({ db, storage }: AppDeps) {
             ? encodeCursor({ t: last.createdAt.toISOString(), id: last.id })
             : null,
       }
+    },
+
+    /** Em alta: os mais curtidos dos últimos dias (empate: mais recente primeiro). */
+    async trending(user: AuthUser) {
+      const rows = await db.post.findMany({
+        where: {
+          createdAt: { gte: new Date(Date.now() - TRENDING_DAYS * 24 * 60 * 60 * 1000) },
+          author: visibleTo(user.id),
+        },
+        include: postInclude(user.id),
+        orderBy: [{ likes: { _count: 'desc' } }, { createdAt: 'desc' }],
+        take: TRENDING_LIMIT,
+      })
+      return rows.map((post) => toPost(post, user.id))
     },
 
     async get(user: AuthUser, postId: string) {
@@ -186,12 +206,14 @@ export function createSocialService({ db, storage }: AppDeps) {
         create: { postId, userId: user.id },
         update: {},
       })
+      await notifier.postLiked(user.id, postId)
       return likeState(user, postId)
     },
 
     async unlike(user: AuthUser, postId: string) {
       await visiblePost(user, postId)
       await db.postLike.deleteMany({ where: { postId, userId: user.id } })
+      await notifier.postUnliked(user.id, postId)
       return likeState(user, postId)
     },
 
@@ -235,6 +257,7 @@ export function createSocialService({ db, storage }: AppDeps) {
         data: { postId, authorId: user.id, content },
         include: { author: authorSelect },
       })
+      await notifier.postCommented(user.id, postId, content)
       return toComment(comment, user.id)
     },
 

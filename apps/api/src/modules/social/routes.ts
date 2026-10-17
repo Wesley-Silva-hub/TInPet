@@ -41,6 +41,12 @@ export const socialRoutes: FastifyPluginAsyncZod = async (app) => {
     (request) => service.list(request.auth, request.query),
   )
 
+  app.get(
+    '/posts/trending',
+    { schema: { ...base, response: { 200: z.array(postSchema) } } },
+    (request) => service.trending(request.auth),
+  )
+
   app.post(
     '/posts',
     {

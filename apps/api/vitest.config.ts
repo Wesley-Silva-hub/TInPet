@@ -15,6 +15,9 @@ export default defineConfig({
     globalSetup: ['./src/test/global-setup.ts'],
     // Os testes de integração compartilham o mesmo banco
     fileParallelism: false,
+    // Integração com banco real: o primeiro teste de cada arquivo sobe o app e limpa o banco
+    testTimeout: 20_000,
+    hookTimeout: 30_000,
     env: {
       NODE_ENV: 'test',
       DATABASE_URL: testDatabaseUrl,
