@@ -67,6 +67,12 @@ enum ArticleCategory {
   EVENTS
 }
 
+enum NotificationType {
+  POST_LIKE
+  POST_COMMENT
+  MATCH
+}
+
 enum ReportReason {
   SPAM
   OFFENSIVE
@@ -96,20 +102,22 @@ model User {
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
-  maritalStatus  MaritalStatus?  @relation(fields: [maritalStatusId], references: [id], onDelete: SetNull)
-  profession     Profession?     @relation(fields: [professionId], references: [id], onDelete: SetNull)
-  company        CompanyProfile?
-  pets           Pet[]
-  products       Product[]
-  messages       Message[]
-  refreshTokens  RefreshToken[]
-  blocksMade     Block[]         @relation("Blocker")
-  blocksReceived Block[]         @relation("Blocked")
-  reportsMade    Report[]        @relation("Reporter")
-  reportsAgainst Report[]        @relation("Reported")
-  posts          Post[]
-  postLikes      PostLike[]
-  postComments   PostComment[]
+  maritalStatus     MaritalStatus?  @relation(fields: [maritalStatusId], references: [id], onDelete: SetNull)
+  profession        Profession?     @relation(fields: [professionId], references: [id], onDelete: SetNull)
+  company           CompanyProfile?
+  pets              Pet[]
+  products          Product[]
+  messages          Message[]
+  refreshTokens     RefreshToken[]
+  blocksMade        Block[]         @relation("Blocker")
+  blocksReceived    Block[]         @relation("Blocked")
+  reportsMade       Report[]        @relation("Reporter")
+  reportsAgainst    Report[]        @relation("Reported")
+  posts             Post[]
+  postLikes         PostLike[]
+  postComments      PostComment[]
+  notifications     Notification[]  @relation("NotificationRecipient")
+  notificationsSent Notification[]  @relation("NotificationActor")
 
   @@index([maritalStatusId])
   @@index([professionId])
@@ -170,14 +178,15 @@ model Pet {
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
-  owner          User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  breed          Breed?     @relation(fields: [breedId], references: [id], onDelete: SetNull)
+  owner          User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  breed          Breed?       @relation(fields: [breedId], references: [id], onDelete: SetNull)
   photos         PetPhoto[]
-  swipesMade     Swipe[]    @relation("SwipeFrom")
-  swipesReceived Swipe[]    @relation("SwipeTo")
-  matchesAsA     Match[]    @relation("MatchPetA")
-  matchesAsB     Match[]    @relation("MatchPetB")
+  swipesMade     Swipe[]      @relation("SwipeFrom")
+  swipesReceived Swipe[]      @relation("SwipeTo")
+  matchesAsA     Match[]      @relation("MatchPetA")
+  matchesAsB     Match[]      @relation("MatchPetB")
   posts          Post[]
+  vaccines       PetVaccine[]
 
   @@index([ownerId])
   @@index([breedId])
@@ -212,14 +221,15 @@ model Swipe {
 
 /// pet_a_id < pet_b_id (garantido pela aplicação e por CHECK na migration), um match por par.
 model Match {
-  id          String    @id @default(uuid()) @db.Uuid
-  petAId      String    @map("pet_a_id") @db.Uuid
-  petBId      String    @map("pet_b_id") @db.Uuid
-  createdAt   DateTime  @default(now()) @map("created_at")
-  unmatchedAt DateTime? @map("unmatched_at")
-  petA        Pet       @relation("MatchPetA", fields: [petAId], references: [id], onDelete: Cascade)
-  petB        Pet       @relation("MatchPetB", fields: [petBId], references: [id], onDelete: Cascade)
-  messages    Message[]
+  id            String         @id @default(uuid()) @db.Uuid
+  petAId        String         @map("pet_a_id") @db.Uuid
+  petBId        String         @map("pet_b_id") @db.Uuid
+  createdAt     DateTime       @default(now()) @map("created_at")
+  unmatchedAt   DateTime?      @map("unmatched_at")
+  petA          Pet            @relation("MatchPetA", fields: [petAId], references: [id], onDelete: Cascade)
+  petB          Pet            @relation("MatchPetB", fields: [petBId], references: [id], onDelete: Cascade)
+  messages      Message[]
+  notifications Notification[]
 
   @@unique([petAId, petBId])
   @@index([petBId])
@@ -308,17 +318,18 @@ model Report {
 
 /// Publicação no feed social (a "Postagem" do MER original).
 model Post {
-  id        String        @id @default(uuid()) @db.Uuid
-  authorId  String        @map("author_id") @db.Uuid
-  petId     String?       @map("pet_id") @db.Uuid
-  imageKey  String        @map("image_key")
-  caption   String        @default("") @db.VarChar(2200)
-  createdAt DateTime      @default(now()) @map("created_at")
-  updatedAt DateTime      @updatedAt @map("updated_at")
-  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  pet       Pet?          @relation(fields: [petId], references: [id], onDelete: SetNull)
-  likes     PostLike[]
-  comments  PostComment[]
+  id            String         @id @default(uuid()) @db.Uuid
+  authorId      String         @map("author_id") @db.Uuid
+  petId         String?        @map("pet_id") @db.Uuid
+  imageKey      String         @map("image_key")
+  caption       String         @default("") @db.VarChar(2200)
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  author        User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  pet           Pet?           @relation(fields: [petId], references: [id], onDelete: SetNull)
+  likes         PostLike[]
+  comments      PostComment[]
+  notifications Notification[]
 
   @@index([createdAt, id])
   @@index([authorId, createdAt])
@@ -368,4 +379,46 @@ model Article {
   @@index([category, publishedAt])
   @@index([publishedAt])
   @@map("articles")
+}
+
+/// Carteira de vacinação. Dados de saúde: só o tutor vê; o público vê apenas "vacinas em dia".
+model PetVaccine {
+  id        String    @id @default(uuid()) @db.Uuid
+  petId     String    @map("pet_id") @db.Uuid
+  name      String    @db.VarChar(80)
+  appliedAt DateTime  @map("applied_at") @db.Date
+  nextDueAt DateTime? @map("next_due_at") @db.Date
+  clinic    String    @default("") @db.VarChar(120)
+  notes     String    @default("") @db.VarChar(500)
+  createdAt DateTime  @default(now()) @map("created_at")
+  pet       Pet       @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId, appliedAt])
+  @@index([nextDueAt])
+  @@map("pet_vaccines")
+}
+
+/// Avisos dentro do app (curtidas, comentários e matches).
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  actorId   String?          @map("actor_id") @db.Uuid
+  type      NotificationType
+  postId    String?          @map("post_id") @db.Uuid
+  matchId   String?          @map("match_id") @db.Uuid
+  /// Trecho do comentário, quando houver
+  preview   String           @default("") @db.VarChar(140)
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+  user      User             @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  actor     User?            @relation("NotificationActor", fields: [actorId], references: [id], onDelete: Cascade)
+  post      Post?            @relation(fields: [postId], references: [id], onDelete: Cascade)
+  match     Match?           @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@index([actorId])
+  @@index([postId])
+  @@index([matchId])
+  @@map("notifications")
 }
