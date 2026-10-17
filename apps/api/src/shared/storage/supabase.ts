@@ -17,10 +17,15 @@ export class SupabaseStorageProvider implements StorageProvider {
     this.baseUrl = `${options.url.replace(/\/$/, '')}/storage/v1`
   }
 
+  /**
+   * Chaves novas (sb_secret_...) vão só no header apikey; a legada service_role é um JWT
+   * e também precisa do Authorization.
+   */
   private headers(extra: Record<string, string> = {}) {
+    const key = this.options.serviceKey
     return {
-      apikey: this.options.serviceKey,
-      authorization: `Bearer ${this.options.serviceKey}`,
+      apikey: key,
+      ...(key.startsWith('eyJ') && { authorization: `Bearer ${key}` }),
       ...extra,
     }
   }
