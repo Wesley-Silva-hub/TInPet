@@ -1,0 +1,294 @@
+// Convenções: models em PascalCase, tabelas/colunas em snake_case, IDs uuid.
+// Arquivos (fotos, avatar, imagens) guardam só a chave do storage; a URL é montada
+// pelo StorageProvider, o que permite trocar Supabase por S3/VPS sem migrar dados.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  COMPANY
+  ADMIN
+}
+
+enum Species {
+  DOG
+  CAT
+  BIRD
+  RABBIT
+  RODENT
+  OTHER
+}
+
+enum PetSex {
+  MALE
+  FEMALE
+}
+
+enum PetSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
+enum PetPurpose {
+  MATING
+  FRIENDSHIP
+  BOTH
+}
+
+enum SwipeDirection {
+  LIKE
+  PASS
+}
+
+enum ProductCategory {
+  FOOD
+  ACCESSORIES
+  TOYS
+  HYGIENE
+  HEALTH
+  SERVICES
+  OTHER
+}
+
+enum ReportReason {
+  SPAM
+  OFFENSIVE
+  FAKE_PROFILE
+  ANIMAL_ABUSE
+  OTHER
+}
+
+model User {
+  id                String    @id @default(uuid()) @db.Uuid
+  email             String    @unique @db.VarChar(254)
+  passwordHash      String    @map("password_hash")
+  name              String    @db.VarChar(80)
+  birthDate         DateTime  @map("birth_date") @db.Date
+  bio               String    @default("") @db.VarChar(500)
+  role              Role      @default(OWNER)
+  maritalStatusId   Int?      @map("marital_status_id")
+  professionId      Int?      @map("profession_id")
+  avatarKey         String?   @map("avatar_key")
+  /// Coordenadas arredondadas (~1 km). Nunca devolvidas para outros usuários.
+  latitude          Float?
+  longitude         Float?
+  city              String?   @db.VarChar(80)
+  state             String?   @db.Char(2)
+  consentTermsAt    DateTime  @map("consent_terms_at")
+  consentLocationAt DateTime? @map("consent_location_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  maritalStatus  MaritalStatus?  @relation(fields: [maritalStatusId], references: [id], onDelete: SetNull)
+  profession     Profession?     @relation(fields: [professionId], references: [id], onDelete: SetNull)
+  company        CompanyProfile?
+  pets           Pet[]
+  products       Product[]
+  messages       Message[]
+  refreshTokens  RefreshToken[]
+  blocksMade     Block[]         @relation("Blocker")
+  blocksReceived Block[]         @relation("Blocked")
+  reportsMade    Report[]        @relation("Reporter")
+  reportsAgainst Report[]        @relation("Reported")
+
+  @@index([maritalStatusId])
+  @@index([professionId])
+  @@index([latitude, longitude])
+  @@map("users")
+}
+
+model MaritalStatus {
+  id    Int    @id @default(autoincrement())
+  name  String @unique @db.VarChar(50)
+  users User[]
+
+  @@map("marital_statuses")
+}
+
+model Profession {
+  id    Int    @id @default(autoincrement())
+  name  String @unique @db.VarChar(80)
+  users User[]
+
+  @@map("professions")
+}
+
+/// Dados da empresa anunciante (usuário com papel COMPANY).
+model CompanyProfile {
+  userId    String  @id @map("user_id") @db.Uuid
+  tradeName String  @map("trade_name") @db.VarChar(120)
+  cnpj      String  @unique @db.Char(14)
+  phone     String? @db.VarChar(20)
+  website   String? @db.VarChar(300)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("company_profiles")
+}
+
+model Breed {
+  id      Int     @id @default(autoincrement())
+  species Species
+  name    String  @db.VarChar(80)
+  pets    Pet[]
+
+  @@unique([species, name])
+  @@map("breeds")
+}
+
+model Pet {
+  id        String     @id @default(uuid()) @db.Uuid
+  ownerId   String     @map("owner_id") @db.Uuid
+  name      String     @db.VarChar(50)
+  species   Species
+  breedId   Int?       @map("breed_id")
+  sex       PetSex
+  size      PetSize
+  birthDate DateTime?  @map("birth_date") @db.Date
+  bio       String     @default("") @db.VarChar(500)
+  purpose   PetPurpose
+  isActive  Boolean    @default(true) @map("is_active")
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  owner          User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  breed          Breed?     @relation(fields: [breedId], references: [id], onDelete: SetNull)
+  photos         PetPhoto[]
+  swipesMade     Swipe[]    @relation("SwipeFrom")
+  swipesReceived Swipe[]    @relation("SwipeTo")
+  matchesAsA     Match[]    @relation("MatchPetA")
+  matchesAsB     Match[]    @relation("MatchPetB")
+
+  @@index([ownerId])
+  @@index([breedId])
+  @@index([species, isActive])
+  @@map("pets")
+}
+
+model PetPhoto {
+  id         String   @id @default(uuid()) @db.Uuid
+  petId      String   @map("pet_id") @db.Uuid
+  storageKey String   @map("storage_key")
+  position   Int
+  createdAt  DateTime @default(now()) @map("created_at")
+  pet        Pet      @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId, position])
+  @@map("pet_photos")
+}
+
+model Swipe {
+  fromPetId String         @map("from_pet_id") @db.Uuid
+  toPetId   String         @map("to_pet_id") @db.Uuid
+  direction SwipeDirection
+  createdAt DateTime       @default(now()) @map("created_at")
+  fromPet   Pet            @relation("SwipeFrom", fields: [fromPetId], references: [id], onDelete: Cascade)
+  toPet     Pet            @relation("SwipeTo", fields: [toPetId], references: [id], onDelete: Cascade)
+
+  @@id([fromPetId, toPetId])
+  @@index([toPetId])
+  @@map("swipes")
+}
+
+/// pet_a_id < pet_b_id (garantido pela aplicação e por CHECK na migration), um match por par.
+model Match {
+  id          String    @id @default(uuid()) @db.Uuid
+  petAId      String    @map("pet_a_id") @db.Uuid
+  petBId      String    @map("pet_b_id") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at")
+  unmatchedAt DateTime? @map("unmatched_at")
+  petA        Pet       @relation("MatchPetA", fields: [petAId], references: [id], onDelete: Cascade)
+  petB        Pet       @relation("MatchPetB", fields: [petBId], references: [id], onDelete: Cascade)
+  messages    Message[]
+
+  @@unique([petAId, petBId])
+  @@index([petBId])
+  @@map("matches")
+}
+
+model Message {
+  id        String    @id @default(uuid()) @db.Uuid
+  matchId   String    @map("match_id") @db.Uuid
+  senderId  String    @map("sender_id") @db.Uuid
+  content   String    @db.VarChar(2000)
+  readAt    DateTime? @map("read_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  match     Match     @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  sender    User      @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([matchId, createdAt])
+  @@index([senderId])
+  @@map("messages")
+}
+
+model Product {
+  id           String          @id @default(uuid()) @db.Uuid
+  companyId    String          @map("company_id") @db.Uuid
+  title        String          @db.VarChar(120)
+  description  String          @default("") @db.VarChar(2000)
+  /// Sempre em centavos.
+  priceCents   Int             @map("price_cents")
+  category     ProductCategory
+  imageKey     String?         @map("image_key")
+  externalLink String?         @map("external_link") @db.VarChar(500)
+  isActive     Boolean         @default(true) @map("is_active")
+  createdAt    DateTime        @default(now()) @map("created_at")
+  updatedAt    DateTime        @updatedAt @map("updated_at")
+  company      User            @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([category, isActive, createdAt])
+  @@map("products")
+}
+
+/// Refresh tokens rotativos. Só o hash é guardado; reuso de token revogado revoga a família inteira.
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  familyId  String    @map("family_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
+  @@map("refresh_tokens")
+}
+
+model Block {
+  blockerId String   @map("blocker_id") @db.Uuid
+  blockedId String   @map("blocked_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@id([blockerId, blockedId])
+  @@index([blockedId])
+  @@map("blocks")
+}
+
+/// Denúncias ficam para moderação mesmo se o denunciante excluir a conta.
+model Report {
+  id         String       @id @default(uuid()) @db.Uuid
+  reporterId String?      @map("reporter_id") @db.Uuid
+  reportedId String       @map("reported_id") @db.Uuid
+  reason     ReportReason
+  details    String       @default("") @db.VarChar(1000)
+  createdAt  DateTime     @default(now()) @map("created_at")
+  resolvedAt DateTime?    @map("resolved_at")
+  reporter   User?        @relation("Reporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  reported   User         @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([reportedId])
+  @@map("reports")
+}
