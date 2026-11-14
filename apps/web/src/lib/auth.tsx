@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
 import type { AuthResponse, LoginInput, Me, RegisterInput } from '@tinpet/shared'
 import { createContext, type ReactNode, use, useEffect, useMemo, useState } from 'react'
-import { api, applySession, refreshSession, setSessionListener } from './api'
+import { api, applySession, hasSessionHint, refreshSession, setSessionListener } from './api'
 
 interface AuthContextValue {
   user: Me | null
@@ -17,14 +17,17 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const [user, setUser] = useState<Me | null>(null)
-  const [status, setStatus] = useState<AuthContextValue['status']>('loading')
+  // Quem nunca entrou neste navegador vê as páginas públicas na hora, sem esperar a API
+  const [status, setStatus] = useState<AuthContextValue['status']>(() =>
+    hasSessionHint() ? 'loading' : 'anonymous',
+  )
 
   useEffect(() => {
     setSessionListener((session) => {
       setUser(session?.user ?? null)
       setStatus(session ? 'authenticated' : 'anonymous')
     })
-    // Restaura a sessão a partir do cookie de refresh
+    // Restaura a sessão pelo cookie de refresh; de quebra já acorda a API para o login
     refreshSession()
   }, [])
 
