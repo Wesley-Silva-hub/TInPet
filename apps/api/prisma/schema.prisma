@@ -85,6 +85,10 @@ enum NotificationType {
   LOST_PET_SIGHTING
   /// O pet que você ajudou a procurar foi encontrado
   LOST_PET_FOUND
+  /// Evento de pets marcado perto de você
+  EVENT_NEARBY
+  /// Evento em que você confirmou presença foi cancelado
+  EVENT_CANCELLED
 }
 
 enum LostPetStatus {
@@ -96,6 +100,14 @@ enum LostPetStatus {
 enum SightingSource {
   APP
   TAG
+}
+
+enum EventKind {
+  MEETUP
+  ADOPTION_FAIR
+  WALK
+  VACCINATION
+  OTHER
 }
 
 enum ReportReason {
@@ -149,6 +161,10 @@ model User {
   lostPetAlerts     LostPetAlert[]
   petSightings      PetSighting[]
   promotionViews    PromotionImpression[]
+  eventsOrganized   PetEvent[]
+  eventsAttending   EventAttendee[]
+  reviewsWritten    StoreReview[]         @relation("ReviewAuthor")
+  reviewsReceived   StoreReview[]         @relation("ReviewStore")
 
   @@index([maritalStatusId])
   @@index([professionId])
@@ -455,6 +471,7 @@ model Notification {
   matchId   String?          @map("match_id") @db.Uuid
   petId     String?          @map("pet_id") @db.Uuid
   alertId   String?          @map("alert_id") @db.Uuid
+  eventId   String?          @map("event_id") @db.Uuid
   /// Trecho do comentário, quando houver
   preview   String           @default("") @db.VarChar(140)
   readAt    DateTime?        @map("read_at")
@@ -465,12 +482,14 @@ model Notification {
   match     Match?           @relation(fields: [matchId], references: [id], onDelete: Cascade)
   pet       Pet?             @relation(fields: [petId], references: [id], onDelete: Cascade)
   alert     LostPetAlert?    @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  event     PetEvent?        @relation(fields: [eventId], references: [id], onDelete: Cascade)
 
   @@index([userId, createdAt])
   @@index([userId, readAt])
   @@index([actorId])
   @@index([postId])
   @@index([matchId])
+  @@index([eventId])
   @@map("notifications")
 }
 
@@ -559,4 +578,62 @@ model PetSighting {
   @@index([petId, createdAt])
   @@index([alertId])
   @@map("pet_sightings")
+}
+
+/// Evento de pets (encontro, feira de adoção, cãominhada...). Posição arredondada (~1 km);
+/// o local exato fica no texto que o organizador escreveu.
+model PetEvent {
+  id           String    @id @default(uuid()) @db.Uuid
+  organizerId  String    @map("organizer_id") @db.Uuid
+  title        String    @db.VarChar(80)
+  description  String    @default("") @db.VarChar(1000)
+  kind         EventKind
+  /// Espécies convidadas (vazio = todas)
+  species      Species[] @default([])
+  startsAt     DateTime  @map("starts_at")
+  endsAt       DateTime? @map("ends_at")
+  place        String    @db.VarChar(120)
+  neighborhood String    @default("") @db.VarChar(80)
+  latitude     Float
+  longitude    Float
+  cancelledAt  DateTime? @map("cancelled_at")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  organizer     User            @relation(fields: [organizerId], references: [id], onDelete: Cascade)
+  attendees     EventAttendee[]
+  notifications Notification[]
+
+  @@index([startsAt])
+  @@index([organizerId])
+  @@map("pet_events")
+}
+
+model EventAttendee {
+  eventId   String   @map("event_id") @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  event     PetEvent @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([eventId, userId])
+  @@index([userId])
+  @@map("event_attendees")
+}
+
+/// Avaliação de uma loja por um tutor: uma por pessoa, nota de 1 a 5 (CHECK na migration).
+model StoreReview {
+  id        String   @id @default(uuid()) @db.Uuid
+  storeId   String   @map("store_id") @db.Uuid
+  authorId  String   @map("author_id") @db.Uuid
+  rating    Int
+  comment   String   @default("") @db.VarChar(500)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  store     User     @relation("ReviewStore", fields: [storeId], references: [id], onDelete: Cascade)
+  author    User     @relation("ReviewAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@unique([storeId, authorId])
+  @@index([storeId, createdAt])
+  @@index([authorId])
+  @@map("store_reviews")
 }

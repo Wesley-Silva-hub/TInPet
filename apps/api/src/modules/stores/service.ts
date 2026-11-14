@@ -1,4 +1,9 @@
-import type { StoreSummary, storeProfileInputSchema, storesQuerySchema } from '@tinpet/shared'
+import type {
+  RatingSummary,
+  StoreSummary,
+  storeProfileInputSchema,
+  storesQuerySchema,
+} from '@tinpet/shared'
 import type { z } from 'zod'
 import type { Prisma } from '../../generated/prisma/client'
 import { type AuthUser, requireRole } from '../../shared/auth'
@@ -6,6 +11,7 @@ import type { AppDeps } from '../../shared/context'
 import { meInclude, toMe } from '../../shared/dto'
 import { notFound } from '../../shared/errors'
 import { distanceKm } from '../../shared/geo'
+import { ratingSummaries, summaryOf } from './reviews'
 
 const storeInclude = {
   company: true,
@@ -22,6 +28,7 @@ export function createStoreService({ db, storage }: AppDeps) {
   function toStore(
     row: StoreRow,
     viewer: { latitude: number | null; longitude: number | null } | null,
+    rating: RatingSummary,
   ): StoreSummary {
     const company = row.company
     const logoKey = row.avatarKey ?? row.products.find((product) => product.imageKey)?.imageKey
@@ -39,6 +46,7 @@ export function createStoreService({ db, storage }: AppDeps) {
       logoUrl: logoKey ? storage.publicUrl(logoKey) : null,
       distanceKm: distanceKm(viewer, row),
       productCount: row.products.length,
+      rating,
     }
   }
 
@@ -68,8 +76,12 @@ export function createStoreService({ db, storage }: AppDeps) {
           take: 200,
         }),
       ])
+      const ratings = await ratingSummaries(
+        db,
+        rows.map((row) => row.id),
+      )
       return rows
-        .map((row) => toStore(row, viewer))
+        .map((row) => toStore(row, viewer, summaryOf(ratings, row.id)))
         .filter(
           (store) =>
             query.maxDistanceKm === undefined ||
@@ -90,7 +102,11 @@ export function createStoreService({ db, storage }: AppDeps) {
         include: storeInclude,
       })
       if (!row) throw notFound('Loja')
-      return toStore(row, await viewerLocation(user))
+      const [viewer, ratings] = await Promise.all([
+        viewerLocation(user),
+        ratingSummaries(db, [row.id]),
+      ])
+      return toStore(row, viewer, summaryOf(ratings, row.id))
     },
 
     /** A empresa edita o perfil público da loja. */

@@ -55,6 +55,7 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
       matchId: row.matchId,
       petId: row.petId,
       alertId: row.alertId,
+      eventId: row.eventId,
       petName: pet?.name ?? null,
       petPhotoUrl: petPhoto ? storage.publicUrl(petPhoto) : null,
       preview: row.preview,
@@ -72,11 +73,43 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
     matchId?: string
     petId?: string
     alertId?: string
+    eventId?: string
     preview?: string
   }) {
     if (data.userId === data.actorId) return
     const row = await db.notification.create({ data, include: notificationInclude })
     realtime.toUsers([data.userId], 'notification:new', toNotification(row))
+  }
+
+  /** Mesmo aviso para muitas pessoas de uma vez (sem um evento por linha no banco). */
+  async function createMany(data: {
+    type: NotificationType
+    actorId: string
+    userIds: string[]
+    alertId?: string
+    eventId?: string
+    preview: string
+  }) {
+    const { userIds, ...common } = data
+    const recipients = [...new Set(userIds)].filter((id) => id !== data.actorId)
+    if (recipients.length === 0) return
+    await db.notification.createMany({
+      data: recipients.map((userId) => ({ ...common, userId })),
+    })
+    const sample = await db.notification.findFirst({
+      where: {
+        type: data.type,
+        alertId: data.alertId,
+        eventId: data.eventId,
+        userId: recipients[0],
+      },
+      include: notificationInclude,
+      orderBy: { createdAt: 'desc' },
+    })
+    if (sample) {
+      // O payload só muda no destinatário (id da notificação), que o cliente não usa para exibir
+      realtime.toUsers(recipients, 'notification:new', toNotification(sample))
+    }
   }
 
   return {
@@ -116,25 +149,17 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
 
     /** Avisa os vizinhos de um pet perdido de uma vez (sem um evento por linha no banco). */
     async lostPetNearby(alertId: string, ownerId: string, userIds: string[], preview: string) {
-      const recipients = userIds.filter((id) => id !== ownerId)
-      if (recipients.length === 0) return
-      await db.notification.createMany({
-        data: recipients.map((userId) => ({
-          userId,
-          actorId: ownerId,
-          type: 'LOST_PET_NEARBY' as const,
-          alertId,
-          preview,
-        })),
-      })
-      const sample = await db.notification.findFirst({
-        where: { alertId, type: 'LOST_PET_NEARBY', userId: recipients[0] },
-        include: notificationInclude,
-      })
-      if (sample) {
-        // O payload só muda no destinatário (id da notificação), que o cliente não usa para exibir
-        realtime.toUsers(recipients, 'notification:new', toNotification(sample))
-      }
+      await createMany({ type: 'LOST_PET_NEARBY', actorId: ownerId, userIds, alertId, preview })
+    },
+
+    /** Evento novo: avisa os tutores da região. */
+    async eventNearby(eventId: string, organizerId: string, userIds: string[], preview: string) {
+      await createMany({ type: 'EVENT_NEARBY', actorId: organizerId, userIds, eventId, preview })
+    },
+
+    /** Evento cancelado: avisa quem tinha confirmado presença. */
+    async eventCancelled(eventId: string, organizerId: string, userIds: string[], preview: string) {
+      await createMany({ type: 'EVENT_CANCELLED', actorId: organizerId, userIds, eventId, preview })
     },
 
     async petSighted(input: {

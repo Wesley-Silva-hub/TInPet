@@ -8,6 +8,8 @@ export const notificationTypes = [
   'LOST_PET_NEARBY',
   'LOST_PET_SIGHTING',
   'LOST_PET_FOUND',
+  'EVENT_NEARBY',
+  'EVENT_CANCELLED',
 ] as const
 export const notificationTypeSchema = z.enum(notificationTypes)
 export type NotificationType = z.infer<typeof notificationTypeSchema>
@@ -21,6 +23,7 @@ export const notificationSchema = z.object({
   matchId: z.uuid().nullable(),
   petId: z.uuid().nullable(),
   alertId: z.uuid().nullable(),
+  eventId: z.uuid().nullable(),
   petName: z.string().nullable(),
   petPhotoUrl: z.string().nullable(),
   preview: z.string(),

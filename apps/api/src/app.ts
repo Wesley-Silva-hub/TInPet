@@ -19,6 +19,7 @@ import { z } from 'zod'
 import { authRoutes } from './modules/auth/routes'
 import { chatRoutes } from './modules/chat/routes'
 import { registerChatSocket } from './modules/chat/socket'
+import { eventRoutes } from './modules/events/routes'
 import { healthRoutes } from './modules/health/routes'
 import { lostPetRoutes, publicTagRoutes } from './modules/lostPets/routes'
 import { matchingRoutes } from './modules/matching/routes'
@@ -159,6 +160,7 @@ export async function buildApp({ env, db, storage }: BuildAppOptions) {
       await api.register(lostPetRoutes)
       await api.register(publicTagRoutes)
       await api.register(moderationRoutes, { prefix: '/admin' })
+      await api.register(eventRoutes, { prefix: '/events' })
     },
     { prefix: '/api/v1' },
   )

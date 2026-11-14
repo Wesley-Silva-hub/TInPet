@@ -111,6 +111,11 @@ export function createUserService({ db, storage }: AppDeps) {
           reportsMade: {
             select: { reportedId: true, reason: true, details: true, createdAt: true },
           },
+          eventsOrganized: { orderBy: { startsAt: 'asc' } },
+          eventsAttending: { select: { eventId: true, createdAt: true } },
+          reviewsWritten: {
+            select: { storeId: true, rating: true, comment: true, createdAt: true },
+          },
         },
       })
       if (!user) throw notFound('Usuário')
@@ -155,6 +160,12 @@ export function createUserService({ db, storage }: AppDeps) {
         likes: user.postLikes,
         blocks: user.blocksMade,
         reports: user.reportsMade,
+        eventsOrganized: user.eventsOrganized.map(({ latitude, longitude, ...event }) => ({
+          ...event,
+          approximateLocation: { latitude, longitude },
+        })),
+        eventsAttending: user.eventsAttending,
+        storeReviews: user.reviewsWritten,
       }
     },
 

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { paginationQuerySchema } from './common'
 import { speciesSchema } from './pets'
+import { ratingSummarySchema } from './reviews'
 
 export const productCategories = [
   'FOOD',
@@ -90,6 +91,7 @@ export const storeSummarySchema = z.object({
   /** Distância aproximada até o usuário (nula sem localização de um dos lados). */
   distanceKm: z.number().int().nullable(),
   productCount: z.number().int(),
+  rating: ratingSummarySchema,
 })
 export type StoreSummary = z.infer<typeof storeSummarySchema>
 

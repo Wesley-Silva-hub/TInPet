@@ -17,15 +17,12 @@ import type { AppDeps } from '../../shared/context'
 import { roundCoordinate } from '../../shared/dto'
 import { badRequest, conflict, forbidden, notFound } from '../../shared/errors'
 import { type Coordinates, distanceKm } from '../../shared/geo'
+import { ownersNear } from '../../shared/neighbors'
 import { createNotifier } from '../notifications/service'
 
 /** Alertas a mostrar na lista "perto de você". */
 const LIST_RADIUS_KM = 50
 const LIST_LIMIT = 30
-/** Teto de vizinhos avisados por alerta (protege o banco e evita spam). */
-const MAX_NEIGHBORS = 500
-/** 1 grau de latitude ≈ 111 km: janela do filtro grosso antes do Haversine. */
-const KM_PER_DEGREE = 111
 
 /** Sem 0/O, 1/I/l: fácil de digitar se o QR estiver gasto. */
 const TAG_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
@@ -111,29 +108,6 @@ export function createLostPetService(deps: AppDeps) {
     createdAt: row.createdAt.toISOString(),
   })
 
-  /** Tutores com localização dentro do raio (filtro grosso no banco, fino no Haversine). */
-  async function neighborsOf(point: { latitude: number; longitude: number }, ownerId: string) {
-    const delta = LOST_PET_ALERT_RADIUS_KM / KM_PER_DEGREE
-    const lngDelta = delta / Math.max(0.2, Math.cos((point.latitude * Math.PI) / 180))
-    const candidates = await db.user.findMany({
-      where: {
-        role: 'OWNER',
-        id: { not: ownerId },
-        latitude: { gte: point.latitude - delta, lte: point.latitude + delta },
-        longitude: { gte: point.longitude - lngDelta, lte: point.longitude + lngDelta },
-      },
-      select: { id: true, latitude: true, longitude: true },
-      take: MAX_NEIGHBORS * 2,
-    })
-    return candidates
-      .filter((user) => {
-        const km = distanceKm(point, user)
-        return km !== null && km <= LOST_PET_ALERT_RADIUS_KM
-      })
-      .slice(0, MAX_NEIGHBORS)
-      .map((user) => user.id)
-  }
-
   async function generateTagCode(): Promise<string> {
     for (let attempt = 0; attempt < 5; attempt++) {
       const code = Array.from(
@@ -182,7 +156,12 @@ export function createLostPetService(deps: AppDeps) {
         },
         include: alertInclude,
       })
-      const neighbors = await neighborsOf({ latitude, longitude }, user.id)
+      const neighbors = await ownersNear(
+        db,
+        { latitude, longitude },
+        LOST_PET_ALERT_RADIUS_KM,
+        user.id,
+      )
       await notifier.lostPetNearby(
         row.id,
         user.id,
