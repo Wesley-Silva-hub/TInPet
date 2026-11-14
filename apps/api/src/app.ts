@@ -22,6 +22,7 @@ import { registerChatSocket } from './modules/chat/socket'
 import { healthRoutes } from './modules/health/routes'
 import { lostPetRoutes, publicTagRoutes } from './modules/lostPets/routes'
 import { matchingRoutes } from './modules/matching/routes'
+import { moderationRoutes } from './modules/moderation/routes'
 import { newsRoutes } from './modules/news/routes'
 import { notificationRoutes } from './modules/notifications/routes'
 import { petRoutes } from './modules/pets/routes'
@@ -157,6 +158,7 @@ export async function buildApp({ env, db, storage }: BuildAppOptions) {
       await api.register(notificationRoutes, { prefix: '/notifications' })
       await api.register(lostPetRoutes)
       await api.register(publicTagRoutes)
+      await api.register(moderationRoutes, { prefix: '/admin' })
     },
     { prefix: '/api/v1' },
   )

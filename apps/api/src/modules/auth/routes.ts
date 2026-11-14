@@ -72,4 +72,18 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
       return reply.status(204).send(null)
     },
   )
+
+  app.post(
+    '/logout-all',
+    {
+      onRequest: [app.authenticate],
+      config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+      schema: { tags: ['auth'], security: [{ bearer: [] }], response: { 204: z.null() } },
+    },
+    async (request, reply) => {
+      await service.logoutAll(request.auth.id)
+      reply.clearCookie(REFRESH_COOKIE, { path: REFRESH_COOKIE_PATH })
+      return reply.status(204).send(null)
+    },
+  )
 }

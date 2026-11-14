@@ -439,6 +439,37 @@ async function main() {
     }
   }
 
+  // Moderação: conta ADMIN (só por seed ou SQL; o cadastro público não cria) e denúncias de exemplo
+  await db.user.create({
+    data: {
+      email: `moderacao${DEMO_DOMAIN}`,
+      passwordHash,
+      name: 'Equipe de Moderação',
+      birthDate: new Date('1990-01-01T00:00:00Z'),
+      role: 'ADMIN',
+      consentTermsAt: consentAt,
+    },
+  })
+  const [firstOwner, secondOwner, thirdOwner] = [...userIds.values()]
+  if (firstOwner && secondOwner && thirdOwner) {
+    await db.report.createMany({
+      data: [
+        {
+          reporterId: firstOwner,
+          reportedId: thirdOwner,
+          reason: 'SPAM',
+          details: 'Mandou o mesmo link de venda para várias pessoas no chat.',
+        },
+        {
+          reporterId: secondOwner,
+          reportedId: thirdOwner,
+          reason: 'FAKE_PROFILE',
+          details: 'As fotos parecem ser de outro pet.',
+        },
+      ],
+    })
+  }
+
   process.stdout.write(
     `Seed concluído: ${owners.length} tutores, ${petIds.size} pets, ${postIds.length} posts, ${articles.length} artigos, ${companies.length} lojas, ${promotionCount} ofertas no ar. Senha: tinpet123\n`,
   )

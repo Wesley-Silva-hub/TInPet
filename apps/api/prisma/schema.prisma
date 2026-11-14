@@ -124,6 +124,8 @@ model User {
   state             String?   @db.Char(2)
   consentTermsAt    DateTime  @map("consent_terms_at")
   consentLocationAt DateTime? @map("consent_location_at")
+  /// Conta suspensa pela moderação: não entra nem renova a sessão
+  suspendedAt       DateTime? @map("suspended_at")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
@@ -327,6 +329,7 @@ model RefreshToken {
 
   @@index([userId])
   @@index([familyId])
+  @@index([expiresAt])
   @@map("refresh_tokens")
 }
 
@@ -356,6 +359,7 @@ model Report {
 
   @@index([reporterId])
   @@index([reportedId])
+  @@index([resolvedAt, createdAt])
   @@map("reports")
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { auth, db, registerOwner, setupTestApp } from '../../test/helpers'
+import { cleanupExpiredRefreshTokens } from './service'
 
 const ctx = setupTestApp()
 
@@ -84,6 +85,52 @@ describe('auth', () => {
     })
     expect(logout.statusCode).toBe(204)
     expect((await refresh(refreshCookie)).statusCode).toBe(401)
+  })
+
+  it('sair de todos os dispositivos revoga todas as sessões do usuário', async () => {
+    const { token, user, refreshCookie } = await registerOwner(ctx.app)
+    const otherDevice = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/login',
+      remoteAddress: '10.98.0.1',
+      payload: { email: user.email, password: 'senha-segura-123' },
+    })
+    const otherCookie = otherDevice.cookies.find((c) => c.name === 'tinpet_rt')?.value as string
+    const someoneElse = await registerOwner(ctx.app)
+
+    const response = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/logout-all',
+      headers: auth(token),
+    })
+    expect(response.statusCode).toBe(204)
+    expect((await refresh(refreshCookie)).statusCode).toBe(401)
+    expect((await refresh(otherCookie)).statusCode).toBe(401)
+    // Não afeta outras contas
+    expect((await refresh(someoneElse.refreshCookie)).statusCode).toBe(200)
+  })
+
+  it('sair de todos os dispositivos exige estar logado', async () => {
+    const response = await ctx.app.inject({ method: 'POST', url: '/api/v1/auth/logout-all' })
+    expect(response.statusCode).toBe(401)
+  })
+
+  it('limpeza apaga só refresh tokens vencidos há mais de 30 dias', async () => {
+    const { user } = await registerOwner(ctx.app)
+    const day = 24 * 60 * 60 * 1000
+    const base = { userId: user.id, familyId: crypto.randomUUID() }
+    await db.refreshToken.createMany({
+      data: [
+        { ...base, tokenHash: 'antigo', expiresAt: new Date(Date.now() - 31 * day) },
+        { ...base, tokenHash: 'recente', expiresAt: new Date(Date.now() - 5 * day) },
+      ],
+    })
+    expect(await cleanupExpiredRefreshTokens(db)).toBe(1)
+    const left = await db.refreshToken.findMany({ where: { userId: user.id } })
+    expect(left.map((item) => item.tokenHash)).not.toContain('antigo')
+    expect(left.map((item) => item.tokenHash)).toContain('recente')
+    // A sessão válida do cadastro continua lá
+    expect(left).toHaveLength(2)
   })
 
   it('limita tentativas de login por IP', async () => {
