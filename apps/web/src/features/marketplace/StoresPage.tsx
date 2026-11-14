@@ -5,7 +5,7 @@ import {
   companyKinds,
   type StoreSummary,
 } from '@tinpet/shared'
-import { MapPin, Search, Store, Truck } from 'lucide-react'
+import { MapPin, Search, Star, Store, Truck } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useDeferredValue, useState } from 'react'
 import { Link } from 'react-router'
@@ -46,6 +46,16 @@ export function StoreMeta({ store }: { store: StoreSummary }) {
       {store.distanceKm !== null && (
         <span className="inline-flex items-center gap-1 font-semibold text-brand-600">
           <MapPin className="size-3.5" aria-hidden /> {store.distanceKm} km
+        </span>
+      )}
+      {store.rating.average !== null && (
+        <span
+          className="inline-flex items-center gap-1 font-semibold text-ink"
+          title={`${store.rating.count} ${store.rating.count === 1 ? 'avaliação' : 'avaliações'}`}
+        >
+          <Star className="size-3.5 fill-sun-400 text-sun-400" aria-hidden />
+          {store.rating.average.toLocaleString('pt-BR', { minimumFractionDigits: 1 })}
+          <span className="font-normal text-muted">({store.rating.count})</span>
         </span>
       )}
       {place && <span>{place}</span>}

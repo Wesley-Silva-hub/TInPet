@@ -1,5 +1,6 @@
 import {
   Bell,
+  CalendarHeart,
   Flame,
   House,
   type LucideIcon,
@@ -39,6 +40,7 @@ const ownerExtras: NavItem[] = [
   { to: '/noticias', label: 'Notícias', icon: Newspaper },
   { to: '/loja', label: 'Loja', icon: ShoppingBag },
   { to: '/perdidos', label: 'Perdidos', icon: Siren },
+  { to: '/eventos', label: 'Eventos', icon: CalendarHeart },
 ]
 
 const companyTabs: NavItem[] = [

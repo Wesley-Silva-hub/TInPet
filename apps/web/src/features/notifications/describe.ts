@@ -35,5 +35,15 @@ export function describeNotification(notification: Notification): { text: string
         text: `${notification.petName ?? 'O pet'} foi encontrado! Obrigado por ajudar ${name} 💛`,
         to: `/perdidos/${notification.alertId}`,
       }
+    case 'EVENT_NEARBY':
+      return {
+        text: `📅 Evento perto de você: ${notification.preview}`,
+        to: `/eventos/${notification.eventId}`,
+      }
+    case 'EVENT_CANCELLED':
+      return {
+        text: `Evento cancelado: ${notification.preview}`,
+        to: `/eventos/${notification.eventId}`,
+      }
   }
 }

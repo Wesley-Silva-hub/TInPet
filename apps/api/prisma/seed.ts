@@ -372,6 +372,7 @@ async function main() {
   }
 
   let promotionCount = 0
+  const storeIds: string[] = []
   for (const company of companies) {
     const user = await db.user.create({
       data: {
@@ -400,6 +401,7 @@ async function main() {
         },
       },
     })
+    storeIds.push(user.id)
     for (const [index, product] of company.products.entries()) {
       const { image, promotion, ...data } = product
       const created = await db.product.create({
@@ -439,6 +441,96 @@ async function main() {
     }
   }
 
+  // Eventos de pets nos próximos dias, perto dos tutores de demonstração
+  const day = 86_400_000
+  const atHour = (daysAhead: number, hour: number) => {
+    const date = new Date(now + daysAhead * day)
+    date.setUTCHours(hour + 3, 0, 0, 0)
+    return date
+  }
+  const demoEvents = [
+    {
+      key: owners[0]?.key,
+      title: 'Cãominhada no Parque da Cidadania',
+      kind: 'WALK' as const,
+      species: ['DOG' as const],
+      startsAt: atHour(2, 16),
+      endsAt: atHour(2, 18),
+      place: 'Parque da Cidadania, entrada principal',
+      neighborhood: 'Centro',
+      description: 'Passeio leve de 3 km. Traga água, saquinho e coleira com guia.',
+    },
+    {
+      key: owners[1]?.key,
+      title: 'Feira de adoção responsável',
+      kind: 'ADOPTION_FAIR' as const,
+      species: [],
+      startsAt: atHour(5, 9),
+      endsAt: atHour(5, 13),
+      place: 'Praça Pedro II',
+      neighborhood: 'Centro',
+      description: 'ONGs parceiras com cães e gatos vacinados e castrados esperando um lar.',
+    },
+    {
+      key: owners[2]?.key,
+      title: 'Encontro de gateiros',
+      kind: 'MEETUP' as const,
+      species: ['CAT' as const],
+      startsAt: atHour(9, 15),
+      endsAt: null,
+      place: 'Café do Jóquei, área externa',
+      neighborhood: 'Jóquei',
+      description:
+        'Troca de dicas de alimentação e enriquecimento ambiental. Gatos em caixa de transporte.',
+    },
+  ]
+  let eventCount = 0
+  for (const event of demoEvents) {
+    const organizer = owners.find((item) => item.key === event.key)
+    const organizerId = event.key ? userIds.get(event.key) : undefined
+    if (!organizer || !organizerId) continue
+    const { key: _key, ...data } = event
+    const created = await db.petEvent.create({
+      data: {
+        ...data,
+        organizerId,
+        latitude: roundCoordinate(organizer.lat),
+        longitude: roundCoordinate(organizer.lng),
+      },
+    })
+    const guests = [...userIds.values()]
+      .filter((id) => id !== organizerId)
+      .slice(eventCount, eventCount + 4)
+    await db.eventAttendee.createMany({
+      data: guests.map((userId) => ({ eventId: created.id, userId })),
+    })
+    eventCount++
+  }
+
+  // Avaliações das lojas: notas coerentes (maioria boa, algumas medianas)
+  const reviewComments = [
+    'Atendimento muito atencioso, voltarei com certeza.',
+    'Entrega rápida e produtos bem embalados.',
+    'Preço justo, mas a fila estava grande.',
+    '',
+    'Equipe carinhosa com o meu pet!',
+  ]
+  const reviewers = [...userIds.values()]
+  let reviewCount = 0
+  for (const [storeIndex, storeId] of storeIds.entries()) {
+    for (const [index, authorId] of reviewers.slice(storeIndex, storeIndex + 4).entries()) {
+      await db.storeReview.create({
+        data: {
+          storeId,
+          authorId,
+          rating: random() < 0.75 ? 5 - (index % 2) : 3,
+          comment: reviewComments[(storeIndex + index) % reviewComments.length] ?? '',
+        },
+      })
+      reviewCount++
+    }
+  }
+
   // Moderação: conta ADMIN (só por seed ou SQL; o cadastro público não cria) e denúncias de exemplo
   await db.user.create({
     data: {
@@ -471,7 +563,7 @@ async function main() {
   }
 
   process.stdout.write(
-    `Seed concluído: ${owners.length} tutores, ${petIds.size} pets, ${postIds.length} posts, ${articles.length} artigos, ${companies.length} lojas, ${promotionCount} ofertas no ar. Senha: tinpet123\n`,
+    `Seed concluído: ${owners.length} tutores, ${petIds.size} pets, ${postIds.length} posts, ${articles.length} artigos, ${companies.length} lojas, ${promotionCount} ofertas no ar, ${eventCount} eventos, ${reviewCount} avaliações. Senha: tinpet123\n`,
   )
 }
 

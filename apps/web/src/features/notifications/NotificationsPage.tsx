@@ -1,5 +1,15 @@
 import type { Notification } from '@tinpet/shared'
-import { Bell, Eye, Heart, MessageCircle, PartyPopper, Siren, Sparkles } from 'lucide-react'
+import {
+  Bell,
+  CalendarHeart,
+  CalendarX,
+  Eye,
+  Heart,
+  MessageCircle,
+  PartyPopper,
+  Siren,
+  Sparkles,
+} from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router'
@@ -18,6 +28,8 @@ const icons = {
   LOST_PET_NEARBY: { icon: Siren, className: 'bg-brand-700 text-white' },
   LOST_PET_SIGHTING: { icon: Eye, className: 'bg-leaf-500 text-white' },
   LOST_PET_FOUND: { icon: PartyPopper, className: 'bg-leaf-500 text-white' },
+  EVENT_NEARBY: { icon: CalendarHeart, className: 'bg-sky-600 text-white' },
+  EVENT_CANCELLED: { icon: CalendarX, className: 'bg-ink text-canvas' },
 } as const satisfies Record<Notification['type'], unknown>
 
 export function NotificationsPage() {

@@ -75,6 +75,18 @@ export const router = createBrowserRouter([
                 ),
               },
               {
+                path: '/eventos',
+                lazy: page(() => import('../features/events/EventsPage'), 'EventsPage'),
+              },
+              {
+                path: '/eventos/novo',
+                lazy: page(() => import('../features/events/NewEventPage'), 'NewEventPage'),
+              },
+              {
+                path: '/eventos/:id',
+                lazy: page(() => import('../features/events/EventPage'), 'EventPage'),
+              },
+              {
                 path: '/lojas',
                 lazy: page(() => import('../features/marketplace/StoresPage'), 'StoresPage'),
               },

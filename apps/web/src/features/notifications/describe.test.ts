@@ -10,6 +10,7 @@ const base: Notification = {
   postImageUrl: null,
   matchId: null,
   petId: null,
+  eventId: null,
   alertId: '00000000-0000-4000-8000-000000000003',
   petName: 'Mel',
   petPhotoUrl: null,
@@ -39,5 +40,27 @@ describe('avisos de pet perdido', () => {
       text: 'Alguém achou Mel pela plaquinha: “Está comigo”',
       to: `/pets/${notification.petId}`,
     })
+  })
+})
+
+describe('avisos de eventos', () => {
+  const event = {
+    ...base,
+    alertId: null,
+    eventId: '00000000-0000-4000-8000-000000000005',
+    preview: 'Cãominhada (passeio em grupo) sáb., 21/11 em Parque da Cidadania',
+  }
+
+  it('evento perto leva para a página do evento', () => {
+    expect(describeNotification({ ...event, type: 'EVENT_NEARBY' })).toEqual({
+      text: `📅 Evento perto de você: ${event.preview}`,
+      to: `/eventos/${event.eventId}`,
+    })
+  })
+
+  it('evento cancelado também leva para o evento', () => {
+    expect(describeNotification({ ...event, type: 'EVENT_CANCELLED' }).to).toBe(
+      `/eventos/${event.eventId}`,
+    )
   })
 })

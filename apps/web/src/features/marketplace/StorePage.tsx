@@ -12,6 +12,7 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/ui/States
 import { api } from '../../lib/api'
 import { OfferCard, useOffers } from './offers'
 import { ProductTile } from './ProductTile'
+import { StoreReviewsSection } from './StoreReviewsSection'
 import { StoreLogo, StoreMeta } from './StoresPage'
 
 /** Link de rota no mapa: endereço completo se houver, senão bairro + cidade. */
@@ -127,6 +128,8 @@ export function StorePage() {
           </ul>
         )}
       </section>
+
+      <StoreReviewsSection storeId={id} />
     </div>
   )
 }
