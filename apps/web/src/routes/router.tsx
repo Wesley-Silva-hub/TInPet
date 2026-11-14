@@ -210,6 +210,18 @@ export const router = createBrowserRouter([
                   },
                 ],
               },
+              {
+                element: <RequireAuth roles={['ADMIN']} />,
+                children: [
+                  {
+                    path: '/moderacao',
+                    lazy: page(
+                      () => import('../features/moderation/ModerationPage'),
+                      'ModerationPage',
+                    ),
+                  },
+                ],
+              },
               { path: '*', element: <NotFound /> },
             ],
           },

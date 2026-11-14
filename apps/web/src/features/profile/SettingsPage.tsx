@@ -1,4 +1,4 @@
-import { Download, LogOut, Trash2 } from 'lucide-react'
+import { Download, LogOut, MonitorSmartphone, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
@@ -18,6 +18,21 @@ export function SettingsPage() {
   const [exporting, setExporting] = useState(false)
   const [password, setPassword] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [signingOutAll, setSigningOutAll] = useState(false)
+
+  const logoutEverywhere = async () => {
+    if (!window.confirm('Sair em todos os celulares e navegadores, inclusive este?')) return
+    setSigningOutAll(true)
+    try {
+      await api('/auth/logout-all', { method: 'POST' })
+      await logout()
+      toast.success('Você saiu de todos os dispositivos')
+      navigate('/', { replace: true })
+    } catch (error) {
+      toast.error(errorMessage(error))
+      setSigningOutAll(false)
+    }
+  }
 
   const exportData = async () => {
     setExporting(true)
@@ -61,13 +76,17 @@ export function SettingsPage() {
       <section className="rounded-card border border-line bg-surface p-5">
         <p className="text-sm text-muted">Conectado como</p>
         <p className="font-semibold">{me.email}</p>
-        <Button
-          variant="secondary"
-          className="mt-4"
-          onClick={() => logout().then(() => navigate('/'))}
-        >
-          <LogOut className="size-4" aria-hidden /> Sair
-        </Button>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => logout().then(() => navigate('/'))}>
+            <LogOut className="size-4" aria-hidden /> Sair
+          </Button>
+          <Button variant="ghost" loading={signingOutAll} onClick={logoutEverywhere}>
+            <MonitorSmartphone className="size-4" aria-hidden /> Sair de todos os dispositivos
+          </Button>
+        </div>
+        <p className="mt-2 text-xs text-muted">
+          Use se perdeu o celular ou entrou num computador que não é seu.
+        </p>
       </section>
 
       <AppearanceCard />

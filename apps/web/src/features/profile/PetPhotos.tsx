@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { MAX_PET_PHOTOS, type Pet } from '@tinpet/shared'
-import { ImagePlus, Trash2 } from 'lucide-react'
+import { ImagePlus, Star, Trash2 } from 'lucide-react'
 import { useRef } from 'react'
 import { toast } from 'sonner'
 import { Spinner } from '../../components/ui/States'
@@ -20,6 +20,15 @@ export function PetPhotos({ pet }: { pet: Pet }) {
     mutationFn: async (file: File) =>
       api<Pet>(`/pets/${pet.id}/photos`, { method: 'POST', file: await compressImage(file) }),
     onSuccess: onUpdated,
+    onError: (error) => toast.error(errorMessage(error)),
+  })
+  const makeMain = useMutation({
+    mutationFn: (photoId: string) =>
+      api<Pet>(`/pets/${pet.id}/photos/${photoId}/main`, { method: 'PUT' }),
+    onSuccess: (updated) => {
+      onUpdated(updated)
+      toast.success('Foto principal atualizada')
+    },
     onError: (error) => toast.error(errorMessage(error)),
   })
   const remove = useMutation({
@@ -57,6 +66,22 @@ export function PetPhotos({ pet }: { pet: Pet }) {
             >
               <Trash2 className="size-4" aria-hidden />
             </button>
+            {index === 0 ? (
+              <span className="absolute bottom-1.5 left-1.5 inline-flex items-center gap-1 rounded-full bg-brand-500 px-2 py-1 text-xs font-bold text-white">
+                <Star className="size-3 fill-current" aria-hidden /> Principal
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => makeMain.mutate(photo.id)}
+                disabled={makeMain.isPending}
+                aria-label={`Usar foto ${index + 1} como principal`}
+                title="Usar como principal"
+                className="absolute bottom-1.5 left-1.5 grid size-9 place-items-center rounded-full bg-black/60 text-white"
+              >
+                <Star className="size-4" aria-hidden />
+              </button>
+            )}
           </li>
         ))}
         {pet.photos.length < MAX_PET_PHOTOS && (

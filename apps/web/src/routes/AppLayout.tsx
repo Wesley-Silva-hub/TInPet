@@ -7,6 +7,7 @@ import {
   Newspaper,
   PlusSquare,
   Settings,
+  ShieldAlert,
   ShoppingBag,
   Siren,
   Store,
@@ -48,6 +49,15 @@ const companyTabs: NavItem[] = [
   { to: '/configuracoes', label: 'Conta', icon: Settings },
 ]
 
+const adminTabs: NavItem[] = [
+  { to: '/moderacao', label: 'Moderação', icon: ShieldAlert },
+  { to: '/noticias', label: 'Notícias', icon: Newspaper },
+  { to: '/loja', label: 'Loja', icon: ShoppingBag },
+  { to: '/configuracoes', label: 'Conta', icon: Settings },
+]
+
+const tabsByRole = { OWNER: ownerTabs, COMPANY: companyTabs, ADMIN: adminTabs } as const
+
 const iconLinkClass =
   (extra = '') =>
   ({ isActive }: { isActive: boolean }) =>
@@ -88,8 +98,8 @@ export function AppLayout() {
   const reduceMotion = useReducedMotion()
   useRealtime(user.role === 'OWNER')
   const isOwner = user.role === 'OWNER'
-  const tabs = isOwner ? ownerTabs : companyTabs
-  const desktopNav = isOwner ? [...ownerTabs, ...ownerExtras] : companyTabs
+  const tabs = tabsByRole[user.role]
+  const desktopNav = isOwner ? [...ownerTabs, ...ownerExtras] : tabs
 
   const tabClass = ({ isActive }: { isActive: boolean }) =>
     `relative flex flex-col items-center gap-0.5 rounded-2xl px-2 py-1.5 text-[11px] font-semibold transition ${

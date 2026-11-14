@@ -68,6 +68,12 @@ export function useMe(): Me {
   return user
 }
 
+const homePaths: Record<Me['role'], string> = {
+  OWNER: '/inicio',
+  COMPANY: '/empresa',
+  ADMIN: '/moderacao',
+}
+
 export function homePathFor(user: Me) {
-  return user.role === 'COMPANY' ? '/empresa' : '/inicio'
+  return homePaths[user.role]
 }
