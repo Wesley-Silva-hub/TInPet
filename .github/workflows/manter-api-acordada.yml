@@ -1,0 +1,34 @@
+name: Manter API acordada
+
+# O Render grátis hiberna a API após 15 min sem tráfego e ela leva ~1 min para acordar,
+# o que deixava a entrada no app lenta. Chamar o health a cada 10 min evita a hibernação
+# e gera atividade no banco (o Supabase pausa projetos parados). Se a API cair, o job
+# falha e o GitHub avisa por e-mail. Repositório público: os minutos do Actions são grátis.
+#
+# Configure em Settings → Secrets and variables → Actions → Variables:
+#   API_HEALTH_URL = https://<servico>.onrender.com/api/v1/health
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: manter-api-acordada
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    name: Health da API
+    if: vars.API_HEALTH_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Chama o health
+        env:
+          API_HEALTH_URL: ${{ vars.API_HEALTH_URL }}
+        run: >-
+          curl --fail --silent --show-error --max-time 90
+          --retry 3 --retry-delay 20 --retry-all-errors
+          "$API_HEALTH_URL"
