@@ -104,6 +104,20 @@ export function createPetService({ db, storage }: AppDeps) {
       return toPet(await ownedPet(user, petId), storage)
     },
 
+    /** Leva a foto para a primeira posição (a que aparece no feed); as demais mantêm a ordem. */
+    async setMainPhoto(user: AuthUser, petId: string, photoId: string) {
+      const pet = await ownedPet(user, petId)
+      const photo = pet.photos.find((item) => item.id === photoId)
+      if (!photo) throw notFound('Foto')
+      const ordered = [photo, ...pet.photos.filter((item) => item.id !== photoId)]
+      await db.$transaction(
+        ordered.map((item, position) =>
+          db.petPhoto.update({ where: { id: item.id }, data: { position } }),
+        ),
+      )
+      return toPet(await ownedPet(user, petId), storage)
+    },
+
     async removePhoto(user: AuthUser, petId: string, photoId: string) {
       const pet = await ownedPet(user, petId)
       const photo = pet.photos.find((item) => item.id === photoId)

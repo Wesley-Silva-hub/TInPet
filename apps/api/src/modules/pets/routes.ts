@@ -65,6 +65,18 @@ export const petRoutes: FastifyPluginAsyncZod = async (app) => {
     },
   )
 
+  app.put(
+    '/:id/photos/:photoId/main',
+    {
+      schema: {
+        ...base,
+        params: z.object({ id: z.uuid(), photoId: z.uuid() }),
+        response: { 200: petSchema },
+      },
+    },
+    (request) => service.setMainPhoto(request.auth, request.params.id, request.params.photoId),
+  )
+
   app.delete(
     '/:id/photos/:photoId',
     {

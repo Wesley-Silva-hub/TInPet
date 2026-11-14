@@ -72,6 +72,47 @@ describe('pets', () => {
     expect(metadata.exif).toBeUndefined()
   })
 
+  it('define a foto principal mantendo a ordem das demais; só o dono pode', async () => {
+    const owner = await registerOwner(ctx.app)
+    const pet = await createPet(ctx.app, owner.token)
+    let current = pet
+    for (let i = 0; i < 3; i++) {
+      const upload = await imageMultipart()
+      const response = await ctx.app.inject({
+        method: 'POST',
+        url: `/api/v1/pets/${pet.id}/photos`,
+        headers: { ...auth(owner.token), ...upload.headers },
+        payload: upload.payload,
+      })
+      current = response.json<Pet>()
+    }
+    const [first, second, third] = current.photos.map((photo) => photo.id)
+
+    const stranger = await registerOwner(ctx.app)
+    const denied = await ctx.app.inject({
+      method: 'PUT',
+      url: `/api/v1/pets/${pet.id}/photos/${third}/main`,
+      headers: auth(stranger.token),
+    })
+    expect(denied.statusCode).toBe(403)
+
+    const response = await ctx.app.inject({
+      method: 'PUT',
+      url: `/api/v1/pets/${pet.id}/photos/${third}/main`,
+      headers: auth(owner.token),
+    })
+    expect(response.statusCode).toBe(200)
+    expect(response.json<Pet>().photos.map((photo) => photo.id)).toEqual([third, first, second])
+
+    // A ordem vale também para quem vê o pet
+    const seen = await ctx.app.inject({
+      method: 'GET',
+      url: `/api/v1/pets/${pet.id}`,
+      headers: auth(stranger.token),
+    })
+    expect(seen.json<Pet>().photos[0]?.id).toBe(third)
+  })
+
   it('rejeita arquivo que não é imagem mesmo com MIME de imagem', async () => {
     const owner = await registerOwner(ctx.app)
     const pet = await createPet(ctx.app, owner.token)
