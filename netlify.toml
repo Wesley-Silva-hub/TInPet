@@ -32,10 +32,8 @@
   to = "/index.html"
   status = 200
 
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+# Sem cache longo em /assets: o Netlify já revalida por ETag, e um cache "imutável" guardaria
+# também um 404 (aconteceu: um deploy quebrado por minutos deixou navegadores presos nele).
 
 # Service worker das notificações push: sempre a versão mais nova (nunca em cache)
 [[headers]]

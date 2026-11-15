@@ -11,6 +11,16 @@ export default defineConfig(({ mode }) => {
   return {
     envDir,
     plugins: [react(), tailwindcss()],
+    build: {
+      rolldownOptions: {
+        // Nomes com ponto antes do hash (padrão do projeto desde o deploy de 15/11/2026)
+        output: {
+          entryFileNames: 'assets/[name].[hash].js',
+          chunkFileNames: 'assets/[name].[hash].js',
+          assetFileNames: 'assets/[name].[hash][extname]',
+        },
+      },
+    },
     server: {
       port: 5173,
       // Mesma origem em dev: o navegador chama /api e o Vite encaminha para a API (inclui WebSocket)

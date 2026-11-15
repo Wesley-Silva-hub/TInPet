@@ -78,7 +78,8 @@ async function publishSite() {
   )
   writeFileSync(
     join(dist, '_headers'),
-    '/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n/sw.js\n  Cache-Control: no-cache\n',
+    // Sem cache longo em /assets: um cache "imutável" guardaria também um 404
+    '/sw.js\n  Cache-Control: no-cache\n',
   )
   // tar do Windows grava caminhos com "/" (o Compress-Archive grava "\" e o site quebra)
   const zip = join(ROOT, 'apps/web/site.zip')
@@ -101,7 +102,7 @@ async function publishSite() {
     state = (await netlify(`/deploys/${deploy.id}`)).state
   }
   const page = await fetch(`https://${SITE_NAME}.netlify.app/`).then((response) => response.text())
-  const script = page.match(/\/assets\/index-[\w-]+\.js/)?.[0]
+  const script = page.match(/\/assets\/index[.-][\w-]+\.js/)?.[0]
   const ok = script
     ? (await fetch(`https://${SITE_NAME}.netlify.app${script}`)).status === 200
     : false
