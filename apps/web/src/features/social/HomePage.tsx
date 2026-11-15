@@ -38,8 +38,8 @@ export function HomePage() {
     <div className="mx-auto flex max-w-xl flex-col gap-6">
       <header className="flex items-end justify-between gap-3">
         <div>
-          <p className="text-muted">Olá, {me.name.split(' ')[0]} 👋</p>
-          <h1 className="text-3xl font-semibold">O que rola na comunidade</h1>
+          <p className="text-muted">Oi, {me.name.split(' ')[0]}</p>
+          <h1 className="text-3xl font-semibold">Na sua vizinhança</h1>
         </div>
         <Link
           to="/publicar"
@@ -95,7 +95,7 @@ export function HomePage() {
         onLoadMore={() => posts.fetchNextPage()}
       />
       {posts.isSuccess && !posts.hasNextPage && items.length > 0 && (
-        <p className="pb-4 text-center text-muted">Você está em dia 🐾</p>
+        <p className="pb-4 text-center text-muted">Por hoje é isso. Volte mais tarde.</p>
       )}
     </div>
   )

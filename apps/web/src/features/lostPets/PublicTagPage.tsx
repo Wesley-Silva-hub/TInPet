@@ -70,7 +70,7 @@ function TagContent({ code, tag }: { code: string; tag: PublicTag }) {
         className="flex flex-col items-center gap-3 rounded-card bg-leaf-500 p-6 text-center text-white"
       >
         <HeartHandshake className="size-12" aria-hidden />
-        <p className="font-display text-2xl font-semibold">Obrigado! 💛</p>
+        <p className="font-display text-2xl font-semibold">Obrigado por avisar.</p>
         <p>
           {tag.ownerFirstName} já recebeu seu recado no celular. Se puder, fique com {tag.petName}{' '}
           por perto até o contato.

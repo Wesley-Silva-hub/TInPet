@@ -160,7 +160,7 @@ function Conversation({ matchId, title, owner, photo }: ConversationProps) {
           </button>
         )}
         {messages.isSuccess && list.length === 0 && (
-          <p className="py-10 text-center text-muted">Diga oi! Comece falando sobre os pets 🐶🐱</p>
+          <p className="py-10 text-center text-muted">Comece pelo mais fácil: pergunte do pet.</p>
         )}
         <ol className="flex flex-col gap-2">
           {list.map((message) => {

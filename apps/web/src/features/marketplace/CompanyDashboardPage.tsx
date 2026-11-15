@@ -109,7 +109,7 @@ function PromotionsPanel() {
     return (
       <Link
         to="/empresa/impulsionar"
-        className="group relative flex flex-col gap-2 overflow-hidden rounded-card bg-gradient-to-br from-brand-500 to-sun-400 p-6 text-white shadow-lg shadow-brand-500/30"
+        className="group relative flex flex-col gap-2 overflow-hidden rounded-card bg-river-500 p-6 text-white"
       >
         <Rocket
           className="absolute -right-4 -bottom-4 size-32 opacity-20 transition group-hover:-translate-y-2 group-hover:rotate-12"
@@ -293,7 +293,7 @@ export function CompanyDashboardPage() {
           to="/empresa/perfil"
           className="rounded-card border border-sun-400/60 bg-sun-400/15 p-4 font-semibold hover:underline"
         >
-          📍 Complete o perfil (bairro e localização) para aparecer em "Pet shops da região".
+          Complete o perfil (bairro e localização) para aparecer em "Pet shops da região".
         </Link>
       )}
 

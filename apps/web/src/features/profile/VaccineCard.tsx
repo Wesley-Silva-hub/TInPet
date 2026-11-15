@@ -63,7 +63,7 @@ export function VaccineCard({ petId, petName }: { petId: string; petName: string
   const save = form.handleSubmit(async (values) => {
     try {
       await api<Vaccine>(`/pets/${petId}/vaccines`, { method: 'POST', body: values })
-      toast.success('Vacina registrada 💉')
+      toast.success('Vacina registrada.')
       form.reset({ name: '', appliedAt: today(), nextDueAt: null, clinic: '', notes: '' })
       setAdding(false)
       refresh()

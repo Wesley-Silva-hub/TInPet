@@ -141,7 +141,7 @@ export function CouponReveal({ promotionId }: { promotionId: string }) {
           }}
           exit={reduceMotion ? undefined : { rotateX: -90, opacity: 0 }}
           whileTap={{ scale: 0.97 }}
-          className="relative flex min-h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-gradient-to-r from-brand-500 to-sun-400 px-4 font-semibold text-white shadow-md shadow-brand-500/30 disabled:opacity-70"
+          className="relative flex min-h-11 w-full items-center justify-center gap-2 overflow-hidden rounded-2xl bg-brand-500 px-4 font-semibold text-white hover:bg-brand-600 disabled:opacity-70"
         >
           <span
             aria-hidden

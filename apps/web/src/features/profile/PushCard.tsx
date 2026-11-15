@@ -40,7 +40,7 @@ export function PushCard() {
       } else if (config.data?.publicKey) {
         await enablePush(config.data.publicKey)
         setActive(true)
-        toast.success('Pronto! Você vai receber os avisos neste aparelho 🔔')
+        toast.success('Pronto: os avisos vão chegar neste aparelho.')
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível ativar')

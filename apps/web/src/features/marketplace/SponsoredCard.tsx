@@ -108,7 +108,7 @@ export function SponsoredCard({ offer, preview = false }: SponsoredCardProps) {
           {offer.hasCoupon && (
             <div className="flex-1">
               {preview ? (
-                <span className="flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-brand-500 to-sun-400 px-4 font-semibold text-white">
+                <span className="flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-brand-500 px-4 font-semibold text-white">
                   <Ticket className="size-5" aria-hidden /> Revelar cupom
                 </span>
               ) : (

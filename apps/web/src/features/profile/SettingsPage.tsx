@@ -64,7 +64,7 @@ export function SettingsPage() {
     try {
       await api('/me', { method: 'DELETE', body: { password } })
       applySession(null)
-      toast.success('Conta excluída. Sentiremos sua falta 🐾')
+      toast.success('Conta excluída. Seus dados foram apagados.')
       navigate('/', { replace: true })
     } catch (error) {
       toast.error(errorMessage(error))

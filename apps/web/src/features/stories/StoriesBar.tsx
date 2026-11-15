@@ -14,10 +14,10 @@ import { StoryViewer } from './StoryViewer'
 function Ring({ group, children }: { group: StoryGroup; children: React.ReactNode }) {
   return (
     <span
-      className={`rounded-full p-[3px] ${
+      className={`block rounded-full p-[3px] ${
         group.allSeen && !group.isMine
           ? 'bg-line'
-          : 'bg-gradient-to-tr from-sun-400 via-brand-500 to-brand-700'
+          : 'bg-linear-to-tr from-sun-400 via-brand-400 to-brand-600'
       }`}
     >
       <span className="block rounded-full border-2 border-canvas">{children}</span>
@@ -118,7 +118,7 @@ export function StoriesBar() {
       <ul className="flex gap-4 pb-1">
         {canPost && (
           <li className="flex w-18 shrink-0 flex-col items-center gap-1">
-            <span className="relative">
+            <span className="relative block">
               {mine ? (
                 <button
                   type="button"

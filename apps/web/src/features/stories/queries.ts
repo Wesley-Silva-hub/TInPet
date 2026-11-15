@@ -25,7 +25,7 @@ export function useCreateStory() {
         fields: { caption: input.caption, petId: input.petId },
       }),
     onSuccess: () => {
-      toast.success('Story no ar por 24 h ✨')
+      toast.success('Story no ar por 24 h.')
       queryClient.invalidateQueries({ queryKey: storiesKey })
     },
     onError: (error) => toast.error(errorMessage(error)),

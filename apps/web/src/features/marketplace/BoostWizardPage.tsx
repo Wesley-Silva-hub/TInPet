@@ -104,7 +104,7 @@ function BoostWizard({ products }: { products: Product[] }) {
     mutationFn: () => api<MyPromotion>('/promotions', { method: 'POST', body: input }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['promotions'] })
-      toast.success('Seu anúncio está no ar! 🚀 Acompanhe os resultados no painel.')
+      toast.success('Seu anúncio está no ar. Acompanhe os resultados no painel.')
       navigate('/empresa')
     },
     onError: (error) => toast.error(errorMessage(error)),
@@ -131,7 +131,7 @@ function BoostWizard({ products }: { products: Product[] }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="⚡ Impulsionar" />
+      <PageHeader title="Impulsionar" />
 
       <ol className="grid grid-cols-4 gap-2" aria-label="Etapas">
         {steps.map((label, index) => (

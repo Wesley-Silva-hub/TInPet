@@ -23,7 +23,7 @@ async function tagImage(pet: Pet, code: string): Promise<string> {
   if (!context) throw new Error('Seu navegador não gerou a imagem')
   context.fillStyle = '#fff4f1'
   context.fillRect(0, 0, width, height)
-  context.fillStyle = '#ef5b4c'
+  context.fillStyle = '#c9441c'
   context.fillRect(0, 0, width, 150)
   context.fillStyle = '#ffffff'
   context.textAlign = 'center'

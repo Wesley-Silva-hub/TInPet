@@ -66,7 +66,7 @@ export function MedicationsCard({ petId, petName }: { petId: string; petName: st
       return api<Medication>(`/pets/${petId}/medications`, { method: 'POST', body: parsed.data })
     },
     onSuccess: () => {
-      toast.success('Remédio adicionado. Avisamos você no dia de cada dose 💊')
+      toast.success('Remédio adicionado. Avisamos você no dia de cada dose.')
       setForm(emptyForm())
       setAdding(false)
       refresh()

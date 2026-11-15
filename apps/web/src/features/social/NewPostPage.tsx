@@ -41,7 +41,7 @@ export function NewPostPage() {
         fields: { caption, petId: pet || null },
       })
       await queryClient.invalidateQueries({ queryKey: ['posts'] })
-      toast.success('Publicado! 🐾')
+      toast.success('Publicado.')
       navigate('/inicio')
     } catch (error) {
       toast.error(errorMessage(error))

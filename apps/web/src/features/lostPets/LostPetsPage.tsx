@@ -82,7 +82,7 @@ export function LostPetsPage() {
       ) : alerts.isError ? (
         <ErrorState error={alerts.error} onRetry={() => alerts.refetch()} />
       ) : alerts.data.length === 0 ? (
-        <EmptyState icon={<PawPrint className="size-8" />} title="Nenhum pet perdido por perto 💛">
+        <EmptyState icon={<PawPrint className="size-8" />} title="Nenhum pet perdido por perto">
           Que bom! Se um dia o seu sumir, abra o perfil dele e toque em "Marcar como perdido": os
           vizinhos são avisados na hora.
         </EmptyState>

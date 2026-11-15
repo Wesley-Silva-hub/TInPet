@@ -12,21 +12,35 @@
   }
 }
 
-/* Identidade TinPet: coral quente + creme, com tema escuro automático */
+/* Identidade TinPet (ver .claude/skills/designer): caju, cajuína e verde-rio sobre papel cru.
+   Contraste: texto branco sobre brand-500 passa AA (4.8:1). */
 @theme {
-  --font-display: "Fredoka", ui-rounded, system-ui, sans-serif;
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
   --font-sans: "Nunito Sans", system-ui, sans-serif;
 
-  --color-brand-50: #fff4f1;
-  --color-brand-100: #ffe3dc;
-  --color-brand-200: #ffc3b5;
-  --color-brand-400: #f7826f;
-  --color-brand-500: #ef5b4c;
-  --color-brand-600: #d9402f;
-  --color-brand-700: #b32f22;
+  /* Caju */
+  --color-brand-50: #fff4ee;
+  --color-brand-100: #fde3d7;
+  --color-brand-200: #f9c3a8;
+  --color-brand-300: #f29a74;
+  --color-brand-400: #e4572e;
+  --color-brand-500: #c9441c;
+  --color-brand-600: #a93716;
+  --color-brand-700: #872b11;
 
-  --color-leaf-500: #2fb383;
-  --color-sun-400: #fbbf24;
+  /* Verde-rio */
+  --color-river-50: #e8f3f1;
+  --color-river-100: #cfe7e3;
+  --color-river-400: #2f8f86;
+  --color-river-500: #0f6b64;
+  --color-river-600: #0b5751;
+  --color-river-700: #08413d;
+
+  /* Cajuína */
+  --color-sun-400: #f2a93b;
+  --color-sun-500: #d98e1f;
+
+  --color-leaf-500: #1a7f54;
 
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -35,7 +49,7 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
 
-  --radius-card: 1.5rem;
+  --radius-card: 1rem;
 
   --animate-shine: shine 2.4s ease-in-out infinite;
   @keyframes shine {
@@ -50,34 +64,34 @@
 }
 
 :root {
-  --canvas: #fff8f0;
-  --surface: #ffffff;
-  --surface-2: #fdf0e6;
-  --ink: #2b1d2e;
-  --muted: #6e5d70;
-  --line: #eadbd2;
+  --canvas: #f7f1e6;
+  --surface: #fffdf8;
+  --surface-2: #efe6d6;
+  --ink: #231a14;
+  --muted: #6b5c4f;
+  --line: #e2d6c3;
   color-scheme: light;
 }
 
 /* Tema escuro: escolhido pelo usuário (data-theme) ou, sem escolha, o do sistema */
 :root[data-theme="dark"] {
-  --canvas: #1a1220;
-  --surface: #251a2d;
-  --surface-2: #30233a;
-  --ink: #f8ecf0;
-  --muted: #b9a7bc;
-  --line: #3e3048;
+  --canvas: #10201f;
+  --surface: #172b29;
+  --surface-2: #1f3734;
+  --ink: #f4ede2;
+  --muted: #b3c2bd;
+  --line: #2b4542;
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --canvas: #1a1220;
-    --surface: #251a2d;
-    --surface-2: #30233a;
-    --ink: #f8ecf0;
-    --muted: #b9a7bc;
-    --line: #3e3048;
+    --canvas: #10201f;
+    --surface: #172b29;
+    --surface-2: #1f3734;
+    --ink: #f4ede2;
+    --muted: #b3c2bd;
+    --line: #2b4542;
     color-scheme: dark;
   }
 }

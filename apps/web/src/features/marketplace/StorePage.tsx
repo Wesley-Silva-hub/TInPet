@@ -6,7 +6,7 @@ import {
   type StoreSummary,
   whatsappLink,
 } from '@tinpet/shared'
-import { ArrowLeft, ExternalLink, MessageCircle, Navigation } from 'lucide-react'
+import { ArrowLeft, ExternalLink, MessageCircle, Navigation, ShoppingBag } from 'lucide-react'
 import { Link, useParams } from 'react-router'
 import { EmptyState, ErrorState, LoadingState } from '../../components/ui/States'
 import { api } from '../../lib/api'
@@ -96,7 +96,7 @@ export function StorePage() {
       {offers.length > 0 && (
         <section aria-labelledby="ofertas-loja" className="flex flex-col gap-3">
           <h2 id="ofertas-loja" className="text-xl font-semibold">
-            ⚡ Ofertas no ar
+            Ofertas no ar
           </h2>
           <ul className="-mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2">
             {offers.map((offer) => (
@@ -115,7 +115,7 @@ export function StorePage() {
         ) : products.isError ? (
           <ErrorState error={products.error} onRetry={() => products.refetch()} />
         ) : products.data.items.length === 0 ? (
-          <EmptyState icon={<span className="text-3xl">🛍️</span>} title="Vitrine vazia">
+          <EmptyState icon={<ShoppingBag className="size-8" />} title="Vitrine vazia">
             Esta loja ainda não publicou produtos.
           </EmptyState>
         ) : (

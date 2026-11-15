@@ -73,7 +73,7 @@ function PetForm({ pet, breeds: allBreeds }: { pet: Pet | undefined; breeds: Bre
         navigate('/perfil')
       } else {
         const created = await api<Pet>('/pets', { method: 'POST', body: values })
-        toast.success('Pet cadastrado! Agora capriche nas fotos 📸')
+        toast.success('Pet cadastrado. Agora capriche nas fotos.')
         navigate(`/pets/${created.id}/editar`, { replace: true })
       }
       invalidate()

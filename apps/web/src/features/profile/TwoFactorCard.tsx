@@ -101,7 +101,7 @@ export function TwoFactorCard() {
       setSetup(null)
       setCode('')
       updateMe(true)
-      toast.success('Verificação em duas etapas ligada 🔐')
+      toast.success('Verificação em duas etapas ligada.')
     })
 
   const disable = () =>

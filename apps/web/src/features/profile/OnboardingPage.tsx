@@ -9,7 +9,7 @@ export function OnboardingPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-5">
       <div>
-        <h1 className="text-3xl font-semibold">Boas-vindas, {me.name.split(' ')[0]}! 🐾</h1>
+        <h1 className="text-3xl font-semibold">Boas-vindas, {me.name.split(' ')[0]}</h1>
         <p className="mt-1 text-muted">Dois passos rápidos e você já pode começar a dar likes.</p>
       </div>
       <LocationCard />

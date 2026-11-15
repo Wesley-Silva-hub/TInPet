@@ -2,7 +2,7 @@ import type { ButtonHTMLAttributes } from 'react'
 import { Spinner } from './States'
 
 const variants = {
-  primary: 'bg-brand-500 text-white hover:bg-brand-600 shadow-sm shadow-brand-500/30',
+  primary: 'bg-brand-500 text-white hover:bg-brand-600',
   secondary: 'bg-surface text-ink border border-line hover:bg-surface-2',
   ghost: 'text-ink hover:bg-surface-2',
   danger: 'bg-brand-700 text-white hover:bg-brand-600',

@@ -81,7 +81,7 @@ export function CommentsSheet({ post, open, onClose }: CommentsSheetProps) {
             <div className="flex-1 overflow-y-auto px-4 py-3">
               {comments.isPending && <LoadingState />}
               {comments.isSuccess && list.length === 0 && (
-                <p className="py-10 text-center text-muted">Seja o primeiro a comentar 💬</p>
+                <p className="py-10 text-center text-muted">Ninguém comentou ainda.</p>
               )}
               <ul className="flex flex-col gap-4">
                 <AnimatePresence initial={false}>

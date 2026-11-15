@@ -32,7 +32,7 @@ const messages = {
   accept: 'Passeio confirmado! O tutor foi avisado.',
   decline: 'Pedido recusado. O tutor foi avisado.',
   cancel: 'Passeio cancelado. A outra pessoa foi avisada.',
-  done: 'Passeio marcado como feito 🐾',
+  done: 'Passeio marcado como feito.',
 } as const
 
 export function useWalkAction() {

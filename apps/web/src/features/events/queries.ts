@@ -32,7 +32,7 @@ export function useEventAction(id: string) {
       queryClient.setQueryData([...eventsKey, id], event)
       queryClient.invalidateQueries({ queryKey: eventsKey, exact: true })
       const messages = {
-        attend: 'Presença confirmada! Até lá 🐾',
+        attend: 'Presença confirmada. Até lá!',
         unattend: 'Tudo bem, presença desfeita',
         cancel: 'Evento cancelado. Quem ia foi avisado.',
       }
