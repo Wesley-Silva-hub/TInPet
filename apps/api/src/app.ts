@@ -23,6 +23,7 @@ import { eventRoutes } from './modules/events/routes'
 import { healthRoutes } from './modules/health/routes'
 import { lostPetRoutes, publicTagRoutes } from './modules/lostPets/routes'
 import { matchingRoutes } from './modules/matching/routes'
+import { mfaRoutes } from './modules/mfa/routes'
 import { moderationRoutes } from './modules/moderation/routes'
 import { newsRoutes } from './modules/news/routes'
 import { notificationRoutes } from './modules/notifications/routes'
@@ -173,6 +174,7 @@ export async function buildApp({ env, db, storage, mail }: BuildAppOptions) {
       await api.register(moderationRoutes, { prefix: '/admin' })
       await api.register(eventRoutes, { prefix: '/events' })
       await api.register(storyRoutes, { prefix: '/stories' })
+      await api.register(mfaRoutes, { prefix: '/me/2fa' })
     },
     { prefix: '/api/v1' },
   )

@@ -150,6 +150,11 @@ model User {
   consentLocationAt DateTime? @map("consent_location_at")
   /// Conta suspensa pela moderação: não entra nem renova a sessão
   suspendedAt       DateTime? @map("suspended_at")
+  /// Segredo do app autenticador, cifrado (AES-256-GCM). Só vale com totpEnabledAt.
+  totpSecret        String?   @map("totp_secret")
+  totpEnabledAt     DateTime? @map("totp_enabled_at")
+  /// Último passo de 30 s aceito: o mesmo código não serve duas vezes
+  totpLastStep      Int?      @map("totp_last_step")
   createdAt         DateTime  @default(now()) @map("created_at")
   updatedAt         DateTime  @updatedAt @map("updated_at")
 
@@ -161,6 +166,7 @@ model User {
   messages          Message[]
   refreshTokens     RefreshToken[]
   passwordResets    PasswordResetToken[]
+  recoveryCodes     RecoveryCode[]
   blocksMade        Block[]               @relation("Blocker")
   blocksReceived    Block[]               @relation("Blocked")
   reportsMade       Report[]              @relation("Reporter")
@@ -753,4 +759,17 @@ model PasswordResetToken {
   @@index([userId])
   @@index([expiresAt])
   @@map("password_reset_tokens")
+}
+
+/// Códigos de recuperação do 2FA: só o hash; cada um vale uma vez.
+model RecoveryCode {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  codeHash  String    @map("code_hash")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, codeHash])
+  @@map("recovery_codes")
 }

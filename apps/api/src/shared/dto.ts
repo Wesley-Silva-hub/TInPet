@@ -85,6 +85,7 @@ export function toMe(user: MeWithRelations, storage: StorageProvider): Me {
     maritalStatus: user.maritalStatus,
     profession: user.profession,
     hasLocation: user.latitude !== null && user.longitude !== null,
+    twoFactorEnabled: user.totpEnabledAt !== null,
     consentLocationAt: user.consentLocationAt?.toISOString() ?? null,
     company: user.company && {
       tradeName: user.company.tradeName,

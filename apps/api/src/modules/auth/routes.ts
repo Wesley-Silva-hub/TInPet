@@ -1,7 +1,9 @@
 import {
   authResponseSchema,
   forgotPasswordSchema,
+  loginResponseSchema,
   loginSchema,
+  mfaLoginSchema,
   registerSchema,
   resetPasswordSchema,
 } from '@tinpet/shared'
@@ -44,12 +46,28 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     '/login',
     {
       config: authRateLimit,
-      schema: { tags: ['auth'], body: loginSchema, response: { 200: authResponseSchema } },
+      schema: { tags: ['auth'], body: loginSchema, response: { 200: loginResponseSchema } },
     },
     async (request, reply) => {
-      const { refreshToken, ...session } = await service.login(
-        request.body.email,
-        request.body.password,
+      const result = await service.login(request.body.email, request.body.password)
+      if ('mfaRequired' in result) return result
+      const { refreshToken, ...session } = result
+      setRefreshCookie(reply, refreshToken)
+      return session
+    },
+  )
+
+  app.post(
+    '/login/2fa',
+    {
+      // Mais apertado que o login: 6 dígitos são poucos
+      config: { rateLimit: { max: 5, timeWindow: '1 minute' } },
+      schema: { tags: ['auth'], body: mfaLoginSchema, response: { 200: authResponseSchema } },
+    },
+    async (request, reply) => {
+      const { refreshToken, ...session } = await service.completeMfa(
+        request.body.mfaToken,
+        request.body.code,
       )
       setRefreshCookie(reply, refreshToken)
       return session

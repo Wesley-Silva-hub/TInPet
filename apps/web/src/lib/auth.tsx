@@ -1,12 +1,14 @@
 import { useQueryClient } from '@tanstack/react-query'
-import type { AuthResponse, LoginInput, Me, RegisterInput } from '@tinpet/shared'
+import type { AuthResponse, LoginInput, LoginResponse, Me, RegisterInput } from '@tinpet/shared'
 import { createContext, type ReactNode, use, useEffect, useMemo, useState } from 'react'
 import { api, applySession, hasSessionHint, refreshSession, setSessionListener } from './api'
 
 interface AuthContextValue {
   user: Me | null
   status: 'loading' | 'authenticated' | 'anonymous'
-  login(input: LoginInput): Promise<Me>
+  /** Com 2FA ligado devolve o token da segunda etapa em vez do usuário. */
+  login(input: LoginInput): Promise<{ user: Me } | { mfaToken: string }>
+  completeMfa(mfaToken: string, code: string): Promise<Me>
   register(input: RegisterInput): Promise<Me>
   logout(): Promise<void>
   setUser(user: Me): void
@@ -39,8 +41,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return {
       user,
       status,
-      login: async (input) =>
-        start(await api<AuthResponse>('/auth/login', { method: 'POST', body: input })),
+      login: async (input) => {
+        const result = await api<LoginResponse>('/auth/login', { method: 'POST', body: input })
+        if ('mfaRequired' in result) return { mfaToken: result.mfaToken }
+        return { user: start(result) }
+      },
+      completeMfa: async (mfaToken, code) =>
+        start(
+          await api<AuthResponse>('/auth/login/2fa', { method: 'POST', body: { mfaToken, code } }),
+        ),
       register: async (input) =>
         start(await api<AuthResponse>('/auth/register', { method: 'POST', body: input })),
       logout: async () => {

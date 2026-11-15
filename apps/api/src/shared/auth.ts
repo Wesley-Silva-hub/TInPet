@@ -8,6 +8,8 @@ export const ACCESS_TOKEN_TTL_SECONDS = 15 * 60
 export const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000
 export const REFRESH_COOKIE = 'tinpet_rt'
 export const REFRESH_COOKIE_PATH = '/api/v1/auth'
+export const MFA_TOKEN_TTL_SECONDS = 5 * 60
+const MFA_PURPOSE = 'tinpet-mfa'
 
 export interface AuthUser {
   id: string
@@ -30,9 +32,35 @@ export class TokenService {
       .sign(this.key)
   }
 
+  /** Token curto da segunda etapa do login (2FA). Não serve como access token. */
+  signMfa(userId: string): Promise<string> {
+    return new SignJWT({ purpose: MFA_PURPOSE })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(userId)
+      .setAudience(MFA_PURPOSE)
+      .setIssuedAt()
+      .setExpirationTime(`${MFA_TOKEN_TTL_SECONDS}s`)
+      .sign(this.key)
+  }
+
+  async verifyMfa(token: string): Promise<string> {
+    try {
+      const { payload } = await jwtVerify(token, this.key, {
+        algorithms: ['HS256'],
+        audience: MFA_PURPOSE,
+      })
+      if (!payload.sub || payload.purpose !== MFA_PURPOSE) throw new Error('payload inválido')
+      return payload.sub
+    } catch {
+      throw unauthorized('A etapa de verificação expirou. Entre de novo.')
+    }
+  }
+
   async verify(token: string): Promise<AuthUser> {
     try {
       const { payload } = await jwtVerify(token, this.key, { algorithms: ['HS256'] })
+      // O token da 2ª etapa do login nunca vale como sessão
+      if (payload.purpose === MFA_PURPOSE) throw new Error('token de 2FA')
       if (!payload.sub || typeof payload.role !== 'string') throw new Error('payload inválido')
       return { id: payload.sub, role: payload.role as Role }
     } catch {

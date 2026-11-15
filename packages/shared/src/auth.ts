@@ -48,3 +48,49 @@ export const resetPasswordSchema = z.object({
   password: passwordSchema,
 })
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
+
+/** Login de conta com 2FA: a senha confere e falta o código do app autenticador. */
+export const mfaChallengeSchema = z.object({
+  mfaRequired: z.literal(true),
+  /** Vale 5 minutos e só serve para a segunda etapa. */
+  mfaToken: z.string(),
+})
+export type MfaChallenge = z.infer<typeof mfaChallengeSchema>
+
+export const loginResponseSchema = z.union([authResponseSchema, mfaChallengeSchema])
+export type LoginResponse = z.infer<typeof loginResponseSchema>
+
+/** Código de 6 dígitos do app ou um código de recuperação (XXXXX-XXXXX). */
+export const mfaCodeSchema = z
+  .string()
+  .trim()
+  .min(6, 'Digite o código de 6 dígitos')
+  .max(20, 'Código inválido')
+
+export const mfaLoginSchema = z.object({
+  mfaToken: z.string().min(10).max(2000),
+  code: mfaCodeSchema,
+})
+export type MfaLoginInput = z.infer<typeof mfaLoginSchema>
+
+export const twoFactorSetupSchema = z.object({
+  /** Para digitar no app se a câmera não ler o QR. */
+  secret: z.string(),
+  otpauthUrl: z.string(),
+})
+export type TwoFactorSetup = z.infer<typeof twoFactorSetupSchema>
+
+export const twoFactorEnableSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .regex(/^\d{6}$/, 'Digite os 6 dígitos do app'),
+})
+
+export const recoveryCodesSchema = z.object({ recoveryCodes: z.array(z.string()) })
+export type RecoveryCodes = z.infer<typeof recoveryCodesSchema>
+
+export const twoFactorDisableSchema = z.object({
+  password: z.string().min(1, 'Informe a senha').max(128),
+  code: mfaCodeSchema,
+})

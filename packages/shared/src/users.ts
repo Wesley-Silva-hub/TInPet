@@ -89,6 +89,7 @@ export const meSchema = z.object({
   maritalStatus: lookupItemSchema.nullable(),
   profession: lookupItemSchema.nullable(),
   hasLocation: z.boolean(),
+  twoFactorEnabled: z.boolean(),
   consentLocationAt: z.string().nullable(),
   company: companyProfileSchema
     .extend({

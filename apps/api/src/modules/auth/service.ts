@@ -14,6 +14,7 @@ import {
 } from '../../shared/errors'
 import type { MailMessage } from '../../shared/mail'
 import type { Db } from '../../shared/prisma'
+import { createMfaService, invalidCode } from '../mfa/service'
 
 /** Janela em que um refresh token recém-rotacionado ainda é tolerado (requisições simultâneas). */
 const ROTATION_GRACE_MS = 30_000
@@ -67,7 +68,9 @@ function resetEmail(to: string, name: string, link: string): MailMessage {
   }
 }
 
-export function createAuthService({ db, storage, tokens, mail, env }: AppDeps) {
+export function createAuthService(deps: AppDeps) {
+  const { db, storage, tokens, mail, env } = deps
+  const mfa = createMfaService(deps)
   async function startSession(userId: string, familyId?: string) {
     const user = await db.user.findUniqueOrThrow({ where: { id: userId }, include: meInclude })
     const refresh = newOpaqueToken()
@@ -133,7 +136,24 @@ export function createAuthService({ db, storage, tokens, mail, env }: AppDeps) {
       }
       // Só avisa da suspensão depois da senha certa (não revela o status a quem chuta e-mails)
       if (user.suspendedAt) throw accountSuspended()
+      // Com 2FA ligado, a senha certa só libera a segunda etapa
+      if (user.totpEnabledAt) {
+        return { mfaRequired: true as const, mfaToken: await tokens.signMfa(user.id) }
+      }
       return startSession(user.id)
+    },
+
+    /** Segunda etapa do login: código do app autenticador ou de recuperação. */
+    async completeMfa(mfaToken: string, code: string) {
+      const userId = await tokens.verifyMfa(mfaToken)
+      const user = await db.user.findUnique({
+        where: { id: userId },
+        select: { suspendedAt: true },
+      })
+      if (!user) throw unauthorized('Sessão expirada')
+      if (user.suspendedAt) throw accountSuspended()
+      if (!(await mfa.checkFactor(userId, code))) throw invalidCode()
+      return startSession(userId)
     },
 
     /** Rotaciona o refresh token. Reuso de token já rotacionado revoga a família inteira. */
