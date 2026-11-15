@@ -107,6 +107,7 @@ export function createProductService({ db, storage }: AppDeps) {
       const rows = await db.product.findMany({
         where: {
           isActive: true,
+          company: { suspendedAt: null },
           category: query.category,
           companyId: query.companyId,
           priceCents: { gte: query.minPriceCents, lte: query.maxPriceCents },
@@ -133,7 +134,7 @@ export function createProductService({ db, storage }: AppDeps) {
 
     async get(viewer: AuthUser | null, productId: string) {
       const product = await db.product.findFirst({
-        where: { id: productId, isActive: true },
+        where: { id: productId, isActive: true, company: { suspendedAt: null } },
         include: productInclude,
       })
       if (!product) throw notFound('Produto')
@@ -157,6 +158,7 @@ export function createProductService({ db, storage }: AppDeps) {
       const candidates = await db.product.findMany({
         where: {
           isActive: true,
+          company: { suspendedAt: null },
           ...(pets.length > 0 && {
             OR: [
               { species: { hasSome: pets.map((pet) => pet.species) } },

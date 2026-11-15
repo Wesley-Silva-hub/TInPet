@@ -29,6 +29,7 @@ const liveWhere = (now: Date): Prisma.PromotionWhereInput => ({
   startsAt: { lte: now },
   endsAt: { gt: now },
   product: { isActive: true },
+  company: { suspendedAt: null },
 })
 
 export function statusOf(

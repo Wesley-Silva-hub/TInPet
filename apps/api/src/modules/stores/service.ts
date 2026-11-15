@@ -61,6 +61,7 @@ export function createStoreService({ db, storage }: AppDeps) {
         db.user.findMany({
           where: {
             role: 'COMPANY',
+            suspendedAt: null,
             company: {
               kind: query.kind,
               ...(query.q && {
@@ -98,7 +99,7 @@ export function createStoreService({ db, storage }: AppDeps) {
 
     async get(user: AuthUser, storeId: string) {
       const row = await db.user.findFirst({
-        where: { id: storeId, role: 'COMPANY' },
+        where: { id: storeId, role: 'COMPANY', suspendedAt: null },
         include: storeInclude,
       })
       if (!row) throw notFound('Loja')

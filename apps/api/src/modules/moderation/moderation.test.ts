@@ -1,7 +1,7 @@
 import type { ModerationReport, Page } from '@tinpet/shared'
 import { describe, expect, it } from 'vitest'
 import type { App } from '../../app'
-import { auth, db, registerOwner, setupTestApp } from '../../test/helpers'
+import { auth, createPet, db, registerOwner, setupTestApp } from '../../test/helpers'
 
 const ctx = setupTestApp()
 
@@ -145,5 +145,75 @@ describe('moderação', () => {
       })
       expect(response.statusCode).toBe(400)
     }
+  })
+})
+
+describe('conta suspensa some do app', () => {
+  it('posts, perfil, pet no Descobrir e loja deixam de aparecer para os outros', async () => {
+    const admin = await registerAdmin(ctx.app)
+    const viewer = await registerOwner(ctx.app)
+    const target = await registerOwner(ctx.app)
+    const store = await registerOwner(ctx.app, { role: 'COMPANY' })
+    for (const person of [viewer, target]) {
+      await ctx.app.inject({
+        method: 'PUT',
+        url: '/api/v1/me/location',
+        headers: auth(person.token),
+        payload: { latitude: -5.07, longitude: -42.79 },
+      })
+    }
+    const myPet = await createPet(ctx.app, viewer.token)
+    const theirPet = await createPet(ctx.app, target.token)
+    await db.post.create({
+      data: {
+        authorId: target.user.id,
+        petId: theirPet.id,
+        imageKey: 'posts/x.webp',
+        caption: 'oi',
+      },
+    })
+
+    const visible = async () => {
+      const [feed, posts, profile, pet, storePage] = await Promise.all([
+        ctx.app.inject({
+          method: 'GET',
+          url: `/api/v1/feed?petId=${myPet.id}`,
+          headers: auth(viewer.token),
+        }),
+        ctx.app.inject({ method: 'GET', url: '/api/v1/posts', headers: auth(viewer.token) }),
+        ctx.app.inject({
+          method: 'GET',
+          url: `/api/v1/users/${target.user.id}`,
+          headers: auth(viewer.token),
+        }),
+        ctx.app.inject({
+          method: 'GET',
+          url: `/api/v1/pets/${theirPet.id}`,
+          headers: auth(viewer.token),
+        }),
+        ctx.app.inject({
+          method: 'GET',
+          url: `/api/v1/stores/${store.user.id}`,
+          headers: auth(viewer.token),
+        }),
+      ])
+      return {
+        feed: feed.json().items.length,
+        posts: posts.json().items.length,
+        profile: profile.statusCode,
+        pet: pet.statusCode,
+        store: storePage.statusCode,
+      }
+    }
+    expect(await visible()).toEqual({ feed: 1, posts: 1, profile: 200, pet: 200, store: 200 })
+
+    for (const id of [target.user.id, store.user.id]) {
+      await ctx.app.inject({
+        method: 'POST',
+        url: `/api/v1/admin/users/${id}/suspend`,
+        headers: auth(admin.token),
+      })
+    }
+    expect(await visible()).toEqual({ feed: 0, posts: 0, profile: 404, pet: 404, store: 404 })
   })
 })

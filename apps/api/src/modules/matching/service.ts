@@ -66,6 +66,7 @@ export function activeMatchOf(userId: string): Prisma.MatchWhereInput {
 
 function blockFreeWith(userId: string): Prisma.UserWhereInput {
   return {
+    suspendedAt: null,
     blocksMade: { none: { blockedId: userId } },
     blocksReceived: { none: { blockerId: userId } },
   }
@@ -156,6 +157,7 @@ export function createMatchingService(deps: AppDeps) {
           WHERE c.is_active
             AND c.owner_id <> me.owner_id
             AND o.role = 'OWNER'
+            AND o.suspended_at IS NULL
             AND c.species = me.species
             AND (
               (me.purpose IN ('FRIENDSHIP', 'BOTH') AND c.purpose IN ('FRIENDSHIP', 'BOTH'))

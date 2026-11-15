@@ -44,6 +44,7 @@ const authorSelect = {
 /** Esconde conteúdo de quem bloqueou o usuário ou foi bloqueado por ele. */
 function visibleTo(viewerId: string): Prisma.UserWhereInput {
   return {
+    suspendedAt: null,
     blocksMade: { none: { blockedId: viewerId } },
     blocksReceived: { none: { blockerId: viewerId } },
   }

@@ -175,7 +175,7 @@ export function createLostPetService(deps: AppDeps) {
     async listNearby(user: AuthUser): Promise<LostPetAlertSummary[]> {
       const viewer = await locationOf(user.id)
       const rows = await db.lostPetAlert.findMany({
-        where: { status: 'ACTIVE' },
+        where: { status: 'ACTIVE', owner: { suspendedAt: null } },
         include: alertInclude,
         orderBy: { createdAt: 'desc' },
         take: 300,

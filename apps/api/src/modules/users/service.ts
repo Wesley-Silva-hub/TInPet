@@ -74,6 +74,7 @@ export function createUserService({ db, storage }: AppDeps) {
         where: {
           id: userId,
           role: 'OWNER',
+          suspendedAt: null,
           blocksMade: { none: { blockedId: viewerId } },
           blocksReceived: { none: { blockerId: viewerId } },
         },

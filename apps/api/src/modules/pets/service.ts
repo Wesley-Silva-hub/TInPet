@@ -61,6 +61,7 @@ export function createPetService({ db, storage }: AppDeps) {
         where: {
           id: petId,
           owner: {
+            suspendedAt: null,
             blocksMade: { none: { blockedId: user.id } },
             blocksReceived: { none: { blockerId: user.id } },
           },
