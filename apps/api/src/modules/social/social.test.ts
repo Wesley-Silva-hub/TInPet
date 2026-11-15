@@ -232,3 +232,46 @@ describe('notícias', () => {
     expect(scheduled.statusCode).toBe(404)
   })
 })
+
+describe('hashtags', () => {
+  it('filtra o feed pela hashtag e monta as tags em alta', async () => {
+    const ana = await registerOwner(ctx.app)
+    const bia = await registerOwner(ctx.app)
+    const first = await createPost(ana.token, { caption: 'Dia de parque! #Caominhada #sol' })
+    await createPost(bia.token, { caption: 'Mais uma #caominhada com a turma #caominhada' })
+    await createPost(bia.token, { caption: 'Sem tag nenhuma, só # solto' })
+
+    const tagged = await feed(ana.token, '?tag=CaoMinhada')
+    expect(tagged.items).toHaveLength(2)
+    const viaHash = await feed(ana.token, `?tag=${encodeURIComponent('#sol')}`)
+    expect(viaHash.items.map((post) => post.id)).toEqual([first.id])
+
+    const trending = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/v1/hashtags/trending',
+      headers: auth(ana.token),
+    })
+    expect(trending.json()).toEqual([
+      { tag: 'caominhada', count: 2 },
+      { tag: 'sol', count: 1 },
+    ])
+  })
+
+  it('posts de quem foi bloqueado não entram na hashtag', async () => {
+    const ana = await registerOwner(ctx.app)
+    const bia = await registerOwner(ctx.app)
+    await createPost(bia.token, { caption: '#gatos' })
+    await ctx.app.inject({
+      method: 'POST',
+      url: `/api/v1/users/${bia.user.id}/block`,
+      headers: auth(ana.token),
+    })
+    expect((await feed(ana.token, '?tag=gatos')).items).toHaveLength(0)
+    const trending = await ctx.app.inject({
+      method: 'GET',
+      url: '/api/v1/hashtags/trending',
+      headers: auth(ana.token),
+    })
+    expect(trending.json()).toEqual([])
+  })
+})

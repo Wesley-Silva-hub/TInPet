@@ -118,6 +118,10 @@ export const router = createBrowserRouter([
                     lazy: page(() => import('../features/social/NewPostPage'), 'NewPostPage'),
                   },
                   {
+                    path: '/tags/:tag',
+                    lazy: page(() => import('../features/social/TagPage'), 'TagPage'),
+                  },
+                  {
                     path: '/posts/:id',
                     lazy: page(() => import('../features/social/PostPage'), 'PostPage'),
                   },

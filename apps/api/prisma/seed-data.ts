@@ -126,7 +126,7 @@ export const owners: SeedOwner[] = [
     posts: [
       [
         'rafael-1',
-        'Home office com supervisão integral. O Bento aprova cada linha de código (ou só quer carinho mesmo).',
+        'Home office com supervisão integral. O Bento aprova cada linha de código (ou só quer carinho mesmo). #homeoffice #petsdotrabalho',
         'bento',
         0.2,
       ],
@@ -177,7 +177,12 @@ export const owners: SeedOwner[] = [
       },
     ],
     posts: [
-      ['julia-1', 'Café da manhã na cama… e advinha quem acordou primeiro? 🐶☕', 'pipoca', 0.5],
+      [
+        'julia-1',
+        'Café da manhã na cama… e adivinha quem acordou primeiro? 🐶☕ #bomdia',
+        'pipoca',
+        0.5,
+      ],
       [
         'julia-2',
         'Sábado preguiçoso no apê novo. A Pipoca já escolheu o lugar dela no sofá.',
@@ -229,7 +234,7 @@ export const owners: SeedOwner[] = [
     ],
     posts: [
       ['camila-1', 'Ela não cabe mais no colo, mas ninguém avisou ela 🤍 #labrador', 'mel', 1],
-      ['camila-2', 'Trilha de outono. Melhor terapia que existe.', 'mel', 6],
+      ['camila-2', 'Trilha de outono. Melhor terapia que existe. #caominhada #labrador', 'mel', 6],
     ],
   },
   {
@@ -261,7 +266,7 @@ export const owners: SeedOwner[] = [
     posts: [
       [
         'larissa-1',
-        'Fim de tarde olhando o horizonte. Ela pensa na vida, eu penso no jantar dela.',
+        'Fim de tarde olhando o horizonte. Ela pensa na vida, eu penso no jantar dela. #fimdetarde #bomdia',
         'kira',
         0.8,
       ],

@@ -11,6 +11,7 @@ import { api, errorMessage } from '../../lib/api'
 export interface PostsFilter {
   authorId?: string
   petId?: string
+  tag?: string
 }
 
 export const postsKey = (filter: PostsFilter = {}) => ['posts', filter] as const

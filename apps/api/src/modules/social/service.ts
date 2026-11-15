@@ -1,11 +1,13 @@
-import type {
-  Comment,
-  commentsQuerySchema,
-  LikeResult,
-  Page,
-  Post,
-  postFieldsSchema,
-  postsQuerySchema,
+import {
+  type Comment,
+  type commentsQuerySchema,
+  extractHashtags,
+  type LikeResult,
+  type Page,
+  type Post,
+  type postFieldsSchema,
+  type postsQuerySchema,
+  type TrendingHashtag,
 } from '@tinpet/shared'
 import type { z } from 'zod'
 import type { Prisma } from '../../generated/prisma/client'
@@ -20,6 +22,8 @@ import { createNotifier } from '../notifications/service'
 const PREVIEW_COMMENTS = 2
 const TRENDING_DAYS = 7
 const TRENDING_LIMIT = 6
+const HASHTAG_TRENDING_DAYS = 14
+const HASHTAG_TRENDING_LIMIT = 8
 
 interface TimeCursor {
   t: string
@@ -126,6 +130,7 @@ export function createSocialService(deps: AppDeps) {
         where: {
           authorId: query.authorId,
           petId: query.petId,
+          ...(query.tag && { hashtags: { some: { tag: query.tag } } }),
           author: visibleTo(user.id),
           ...(cursor && {
             OR: [
@@ -185,10 +190,31 @@ export function createSocialService(deps: AppDeps) {
       const key = newStorageKey(`posts/${user.id}`, 'webp')
       await storage.put(key, image, 'image/webp')
       const post = await db.post.create({
-        data: { authorId: user.id, petId: fields.petId, caption: fields.caption, imageKey: key },
+        data: {
+          authorId: user.id,
+          petId: fields.petId,
+          caption: fields.caption,
+          imageKey: key,
+          hashtags: { create: extractHashtags(fields.caption).map((tag) => ({ tag })) },
+        },
         include: postInclude(user.id),
       })
       return toPost(post, user.id)
+    },
+
+    /** Hashtags mais usadas nos últimos dias (por quem o usuário pode ver). */
+    async trendingHashtags(user: AuthUser): Promise<TrendingHashtag[]> {
+      const groups = await db.postHashtag.groupBy({
+        by: ['tag'],
+        where: {
+          createdAt: { gte: new Date(Date.now() - HASHTAG_TRENDING_DAYS * 24 * 60 * 60 * 1000) },
+          post: { author: visibleTo(user.id) },
+        },
+        _count: { _all: true },
+        orderBy: [{ _count: { tag: 'desc' } }, { tag: 'asc' }],
+        take: HASHTAG_TRENDING_LIMIT,
+      })
+      return groups.map((group) => ({ tag: group.tag, count: group._count._all }))
     },
 
     async remove(user: AuthUser, postId: string) {

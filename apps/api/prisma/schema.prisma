@@ -406,6 +406,7 @@ model Post {
   pet           Pet?           @relation(fields: [petId], references: [id], onDelete: SetNull)
   likes         PostLike[]
   comments      PostComment[]
+  hashtags      PostHashtag[]
   notifications Notification[]
 
   @@index([createdAt, id])
@@ -689,4 +690,17 @@ model PetHealthRecord {
 
   @@index([petId, date])
   @@map("pet_health_records")
+}
+
+/// Hashtag extraída da legenda (minúsculas, sem o #), para buscar e montar as tags em alta.
+model PostHashtag {
+  postId    String   @map("post_id") @db.Uuid
+  tag       String   @db.VarChar(40)
+  createdAt DateTime @default(now()) @map("created_at")
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([postId, tag])
+  @@index([tag, createdAt])
+  @@index([createdAt])
+  @@map("post_hashtags")
 }

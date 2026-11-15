@@ -8,6 +8,7 @@ import {
   postFieldsSchema,
   postSchema,
   postsQuerySchema,
+  trendingHashtagSchema,
 } from '@tinpet/shared'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
@@ -45,6 +46,12 @@ export const socialRoutes: FastifyPluginAsyncZod = async (app) => {
     '/posts/trending',
     { schema: { ...base, response: { 200: z.array(postSchema) } } },
     (request) => service.trending(request.auth),
+  )
+
+  app.get(
+    '/hashtags/trending',
+    { schema: { ...base, response: { 200: z.array(trendingHashtagSchema) } } },
+    (request) => service.trendingHashtags(request.auth),
   )
 
   app.post(

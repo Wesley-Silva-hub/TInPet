@@ -6,6 +6,7 @@ import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Avatar } from '../../components/ui/Avatar'
 import { timeAgo } from '../../lib/time'
+import { Caption } from './Caption'
 import { CommentsSheet } from './CommentsSheet'
 import { useDeletePost, useToggleLike } from './queries'
 
@@ -197,7 +198,7 @@ export function PostCard({ post, priority = false }: { post: Post; priority?: bo
             <Link to={`/usuarios/${post.author.id}`} className="mr-1.5 font-semibold">
               {post.author.name.split(' ')[0]}
             </Link>
-            {caption}
+            <Caption text={caption} />
             {longCaption && !expanded && (
               <button type="button" onClick={() => setExpanded(true)} className="ml-1 text-muted">
                 mais

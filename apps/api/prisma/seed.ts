@@ -4,6 +4,7 @@
  * Fotos reais CC0 em ./seed-assets (ver CREDITS.md). Senha de todos os usuários: tinpet123
  */
 import { readFileSync } from 'node:fs'
+import { extractHashtags } from '@tinpet/shared'
 import argon2 from 'argon2'
 import type { Species } from '../src/generated/prisma/client'
 import { roundCoordinate } from '../src/shared/dto'
@@ -164,6 +165,7 @@ async function main() {
           caption,
           imageKey: await upload(`posts/${user.id}`, asset),
           createdAt,
+          hashtags: { create: extractHashtags(caption).map((tag) => ({ tag, createdAt })) },
         },
       })
       postIds.push({ id: post.id, authorId: user.id, createdAt })

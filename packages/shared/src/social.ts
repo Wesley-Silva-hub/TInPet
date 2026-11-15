@@ -42,6 +42,13 @@ export type Post = z.infer<typeof postSchema>
 export const postsQuerySchema = paginationQuerySchema.extend({
   authorId: z.uuid().optional(),
   petId: z.uuid().optional(),
+  /** Só posts com esta hashtag (sem o #). */
+  tag: z
+    .string()
+    .trim()
+    .max(40)
+    .transform((value) => value.replace(/^#/, '').toLocaleLowerCase('pt-BR'))
+    .optional(),
   limit: z.coerce.number().int().min(1).max(30).default(10),
 })
 export type PostsQuery = z.input<typeof postsQuerySchema>
@@ -102,3 +109,46 @@ export type Article = z.infer<typeof articleSchema>
 export const articlesQuerySchema = paginationQuerySchema.extend({
   category: articleCategorySchema.optional(),
 })
+
+/** Mesmo padrão do preenchimento na migration de hashtags (letras com acento, números e _). */
+const HASHTAG_PATTERN = /#([0-9A-Za-zÀ-ÖØ-öø-ÿ_]{2,40})/g
+export const MAX_HASHTAGS_PER_POST = 10
+
+/** Hashtags da legenda, em minúsculas, sem repetir e na ordem em que aparecem. */
+export function extractHashtags(caption: string): string[] {
+  const tags = new Set<string>()
+  for (const match of caption.matchAll(HASHTAG_PATTERN)) {
+    tags.add((match[1] as string).toLocaleLowerCase('pt-BR'))
+    if (tags.size === MAX_HASHTAGS_PER_POST) break
+  }
+  return [...tags]
+}
+
+/** Divide a legenda em trechos de texto e hashtags (com a posição no texto, boa para chave). */
+export function splitHashtags(caption: string): { start: number; text: string; tag?: string }[] {
+  const parts: { start: number; text: string; tag?: string }[] = []
+  let last = 0
+  for (const match of caption.matchAll(HASHTAG_PATTERN)) {
+    const index = match.index ?? 0
+    if (index > last) parts.push({ start: last, text: caption.slice(last, index) })
+    parts.push({
+      start: index,
+      text: match[0],
+      tag: (match[1] as string).toLocaleLowerCase('pt-BR'),
+    })
+    last = index + match[0].length
+  }
+  if (last < caption.length) parts.push({ start: last, text: caption.slice(last) })
+  return parts
+}
+
+export const hashtagParamsSchema = z.object({
+  tag: z
+    .string()
+    .trim()
+    .regex(/^[0-9A-Za-zÀ-ÖØ-öø-ÿ_]{2,40}$/, 'Hashtag inválida')
+    .transform((value) => value.toLocaleLowerCase('pt-BR')),
+})
+
+export const trendingHashtagSchema = z.object({ tag: z.string(), count: z.number().int() })
+export type TrendingHashtag = z.infer<typeof trendingHashtagSchema>
