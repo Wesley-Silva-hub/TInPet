@@ -66,17 +66,18 @@ Fonte: [docs/notion/documentacao.md](notion/documentacao.md), seções *Ideias d
 | 4 | **Hashtags** | `#tags` nas legendas viram links, página da hashtag e "tags em alta" no Início | Feito |
 | 5 | **Ranking da região** | Pets mais curtidos nos últimos 30 dias num raio de 50 km | Feito |
 | 6 | **Stories de 24 h** | Foto que some em 24 h, barra de stories no Início, visualizador em tela cheia; rotina apaga os vencidos e os arquivos | Feito |
+| 7 | **Esqueci minha senha** | Link por e-mail (30 min, uso único, só o hash no banco), derruba as sessões; arquivo local em dev e Resend em produção | Feito (falta cadastrar a chave do Resend: ver deploy-gratuito.md) |
+| 8 | **Esconder contas suspensas** | Posts, pets, perfil, loja, ofertas, matches e alertas da conta somem para os outros | Feito |
+| 9 | **Linha do tempo do pet** (PetMemories) | Nascimento, chegada, fotos e reencontro (públicos) e vacinas, consultas, peso e 1º match (só o tutor) | Feito |
 
 ### Depois (dependem de conta, conteúdo revisado ou decisão de produto)
 
 | Entrega | Por que esperar |
 |---|---|
-| Esqueci minha senha | Precisa de conta grátis no Resend e da `RESEND_API_KEY`. Tabela de tokens (30 min, uso único) e interface `MailProvider` como o `StorageProvider`. |
 | Notificações push (PWA) | Chaves VAPID; aproveita os lembretes da fase 3. |
 | Doenças comuns por raça | Conteúdo de saúde precisa de revisão de um veterinário antes de publicar. |
 | Dog walker | Novo papel de usuário, agenda e, depois, pagamento: decisão de modelo de negócio. |
 | Autenticação em dois fatores | TOTP pede biblioteca nova (justificar no PR) ou e-mail (depende do Resend). |
-| Esconder contas suspensas no feed | Hoje a suspensão tira o acesso; falta tirar pets e posts dela das listas. |
 
 Cada entrega segue o fluxo do CONTRIBUTING: branch curta, migration quando houver, teste de integração da regra principal e PR com CI verde.
 
