@@ -118,3 +118,14 @@ Guarde os arquivos fora do repositório (eles contêm dados pessoais).
 | "Site not available" no Netlify | Créditos do mês acabaram; volta no próximo ciclo |
 | Fotos não aparecem | Bucket `tinpet` não está público |
 | `prepared statement already exists` | Usou a porta 6543 (modo transação); use o session pooler (5432) |
+
+## Publicar sem esperar o painel
+
+O Render e o Netlify deste projeto são publicados pela API (não pelo push). Com `RENDER_API_KEY` e `NETLIFY_TOKEN` no `.env.deploy` (fora do git):
+
+```bash
+node scripts/publicar.mjs          # API e site
+node scripts/publicar.mjs site     # só o site
+```
+
+O script acompanha até o fim e confere que a API responde e que os arquivos do site carregam.
