@@ -20,6 +20,7 @@ import { LostPetsStrip } from '../lostPets/LostPetsPage'
 import { useOffers } from '../marketplace/offers'
 import { SponsoredCard } from '../marketplace/SponsoredCard'
 import { StoriesBar } from '../stories/StoriesBar'
+import { WalkersTeaser } from '../walks/WalkersPage'
 import { PostCard } from './PostCard'
 import { usePosts } from './queries'
 import { RankingTeaser } from './RankingPage'
@@ -55,6 +56,7 @@ export function HomePage() {
       <Trending />
       <TrendingTags />
       <RankingTeaser />
+      <WalkersTeaser />
       <NewsStrip />
 
       {posts.isPending && (

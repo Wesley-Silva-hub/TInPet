@@ -12,6 +12,10 @@ export const notificationTypes = [
   'EVENT_CANCELLED',
   'VACCINE_DUE',
   'MEDICATION_TODAY',
+  'WALK_REQUESTED',
+  'WALK_ACCEPTED',
+  'WALK_DECLINED',
+  'WALK_CANCELLED',
 ] as const
 export const notificationTypeSchema = z.enum(notificationTypes)
 export type NotificationType = z.infer<typeof notificationTypeSchema>
@@ -26,6 +30,7 @@ export const notificationSchema = z.object({
   petId: z.uuid().nullable(),
   alertId: z.uuid().nullable(),
   eventId: z.uuid().nullable(),
+  walkId: z.uuid().nullable(),
   petName: z.string().nullable(),
   petPhotoUrl: z.string().nullable(),
   preview: z.string(),

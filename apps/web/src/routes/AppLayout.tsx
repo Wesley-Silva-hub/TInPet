@@ -1,6 +1,7 @@
 import {
   Bell,
   CalendarHeart,
+  Dog,
   Flame,
   House,
   type LucideIcon,
@@ -26,6 +27,8 @@ interface NavItem {
   to: string
   label: string
   icon: LucideIcon
+  /** Sem espaço no cabeçalho do celular: só no menu do computador (e atalho no Início). */
+  desktopOnly?: boolean
 }
 
 /** Barra inferior do celular (5 atalhos); o desktop mostra também os extras. */
@@ -41,6 +44,7 @@ const ownerExtras: NavItem[] = [
   { to: '/loja', label: 'Loja', icon: ShoppingBag },
   { to: '/perdidos', label: 'Perdidos', icon: Siren },
   { to: '/eventos', label: 'Eventos', icon: CalendarHeart },
+  { to: '/passeadores', label: 'Passeadores', icon: Dog, desktopOnly: true },
 ]
 
 const companyTabs: NavItem[] = [
@@ -137,11 +141,18 @@ export function AppLayout() {
           </nav>
           {isOwner && (
             <nav aria-label="Atalhos" className="flex items-center gap-1">
-              {ownerExtras.map(({ to, label, icon: Icon }) => (
-                <NavLink key={to} to={to} aria-label={label} className={iconLinkClass('lg:hidden')}>
-                  <Icon className="size-6" aria-hidden />
-                </NavLink>
-              ))}
+              {ownerExtras
+                .filter((item) => !item.desktopOnly)
+                .map(({ to, label, icon: Icon }) => (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    aria-label={label}
+                    className={iconLinkClass('lg:hidden')}
+                  >
+                    <Icon className="size-6" aria-hidden />
+                  </NavLink>
+                ))}
               <NotificationBell />
             </nav>
           )}

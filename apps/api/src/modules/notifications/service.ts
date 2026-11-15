@@ -56,6 +56,7 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
       petId: row.petId,
       alertId: row.alertId,
       eventId: row.eventId,
+      walkId: row.walkId,
       petName: pet?.name ?? null,
       petPhotoUrl: petPhoto ? storage.publicUrl(petPhoto) : null,
       preview: row.preview,
@@ -74,6 +75,7 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
     petId?: string
     alertId?: string
     eventId?: string
+    walkId?: string
     preview?: string
   }) {
     if (data.userId === data.actorId) return
@@ -206,6 +208,18 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
         alertId: input.alertId ?? undefined,
         preview: input.message.slice(0, PREVIEW_LENGTH),
       })
+    },
+
+    /** Etapas do passeio: pedido, aceite, recusa e cancelamento. */
+    async walk(data: {
+      type: 'WALK_REQUESTED' | 'WALK_ACCEPTED' | 'WALK_DECLINED' | 'WALK_CANCELLED'
+      userId: string
+      actorId: string
+      walkId: string
+      petId: string
+      preview: string
+    }) {
+      await create(data)
     },
 
     async lostPetFound(alertId: string, ownerId: string, helperIds: string[]) {

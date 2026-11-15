@@ -11,6 +11,7 @@ const base: Notification = {
   matchId: null,
   petId: null,
   eventId: null,
+  walkId: null,
   alertId: '00000000-0000-4000-8000-000000000003',
   petName: 'Mel',
   petPhotoUrl: null,
@@ -78,5 +79,23 @@ describe('lembretes de saúde', () => {
     expect(describeNotification({ ...health, type: 'MEDICATION_TODAY' }).text).toMatch(
       /^💊 Remédio hoje/,
     )
+  })
+})
+
+describe('avisos de passeio', () => {
+  it('todas as etapas levam para Meus passeios com o nome de quem agiu', () => {
+    const walk = {
+      ...base,
+      alertId: null,
+      walkId: '00000000-0000-4000-8000-000000000007',
+      preview: 'Thor, sáb. 21/11 08:00',
+    }
+    expect(describeNotification({ ...walk, type: 'WALK_REQUESTED' })).toEqual({
+      text: '🦮 Camila pediu um passeio: Thor, sáb. 21/11 08:00',
+      to: '/passeios',
+    })
+    for (const type of ['WALK_ACCEPTED', 'WALK_DECLINED', 'WALK_CANCELLED'] as const) {
+      expect(describeNotification({ ...walk, type }).to).toBe('/passeios')
+    }
   })
 })

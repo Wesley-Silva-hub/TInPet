@@ -553,6 +553,32 @@ async function main() {
     }
   }
 
+  // Passeadores: dois tutores que também passeiam com pets da vizinhança
+  const walkerBios = [
+    'Passeio com 1 pet por vez, sempre com guia e saquinho. Mando foto no fim!',
+    'Estudante de veterinária, adoro cães grandes. Passeios longos de manhã cedo.',
+  ]
+  let walkerCount = 0
+  for (const [index, owner] of owners.slice(-2).entries()) {
+    const userId = userIds.get(owner.key)
+    if (!userId) continue
+    await db.walkerProfile.create({
+      data: {
+        userId,
+        bio: walkerBios[index] ?? '',
+        priceCents: [3000, 4500][index] ?? 3000,
+        walkMinutes: [30, 60][index] ?? 30,
+        neighborhoods: ['Jóquei, Fátima', 'Ininga, Noivos'][index] ?? '',
+        species: ['DOG'],
+        weekdays: [
+          [1, 2, 3, 4, 5],
+          [0, 3, 5, 6],
+        ][index] ?? [1, 2, 3, 4, 5],
+      },
+    })
+    walkerCount++
+  }
+
   // Moderação: conta ADMIN (só por seed ou SQL; o cadastro público não cria) e denúncias de exemplo
   await db.user.create({
     data: {
@@ -585,7 +611,7 @@ async function main() {
   }
 
   process.stdout.write(
-    `Seed concluído: ${owners.length} tutores, ${petIds.size} pets, ${postIds.length} posts, ${articles.length} artigos, ${companies.length} lojas, ${promotionCount} ofertas no ar, ${eventCount} eventos, ${reviewCount} avaliações, ${storyCount} stories. Senha: tinpet123\n`,
+    `Seed concluído: ${owners.length} tutores, ${petIds.size} pets, ${postIds.length} posts, ${articles.length} artigos, ${companies.length} lojas, ${promotionCount} ofertas no ar, ${eventCount} eventos, ${reviewCount} avaliações, ${storyCount} stories, ${walkerCount} passeadores. Senha: tinpet123\n`,
   )
 }
 

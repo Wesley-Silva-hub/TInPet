@@ -125,6 +125,9 @@ export function createUserService({ db, storage }: AppDeps) {
           reviewsWritten: {
             select: { storeId: true, rating: true, comment: true, createdAt: true },
           },
+          walkerProfile: true,
+          walksAsOwner: { orderBy: { startsAt: 'asc' } },
+          walksAsWalker: { orderBy: { startsAt: 'asc' } },
         },
       })
       if (!user) throw notFound('Usuário')
@@ -178,6 +181,9 @@ export function createUserService({ db, storage }: AppDeps) {
         })),
         eventsAttending: user.eventsAttending,
         storeReviews: user.reviewsWritten,
+        walkerProfile: user.walkerProfile,
+        walksRequested: user.walksAsOwner,
+        walksAsWalker: user.walksAsWalker,
       }
     },
 

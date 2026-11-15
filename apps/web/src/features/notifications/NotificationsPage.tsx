@@ -3,6 +3,7 @@ import {
   Bell,
   CalendarHeart,
   CalendarX,
+  Dog,
   Eye,
   Heart,
   MessageCircle,
@@ -34,6 +35,10 @@ const icons = {
   EVENT_CANCELLED: { icon: CalendarX, className: 'bg-ink text-canvas' },
   VACCINE_DUE: { icon: Syringe, className: 'bg-amber-500 text-white' },
   MEDICATION_TODAY: { icon: Pill, className: 'bg-leaf-500 text-white' },
+  WALK_REQUESTED: { icon: Dog, className: 'bg-sky-600 text-white' },
+  WALK_ACCEPTED: { icon: Dog, className: 'bg-leaf-500 text-white' },
+  WALK_DECLINED: { icon: Dog, className: 'bg-ink text-canvas' },
+  WALK_CANCELLED: { icon: Dog, className: 'bg-ink text-canvas' },
 } as const satisfies Record<Notification['type'], unknown>
 
 export function NotificationsPage() {

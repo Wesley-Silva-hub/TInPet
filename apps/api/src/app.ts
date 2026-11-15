@@ -35,6 +35,7 @@ import { socialRoutes } from './modules/social/routes'
 import { storeRoutes } from './modules/stores/routes'
 import { storyRoutes } from './modules/stories/routes'
 import { userRoutes } from './modules/users/routes'
+import { walkRoutes } from './modules/walks/routes'
 import { TokenService } from './shared/auth'
 import { type AppDeps, registerAuthentication } from './shared/context'
 import { type Env, isProduction } from './shared/env'
@@ -175,6 +176,7 @@ export async function buildApp({ env, db, storage, mail }: BuildAppOptions) {
       await api.register(eventRoutes, { prefix: '/events' })
       await api.register(storyRoutes, { prefix: '/stories' })
       await api.register(mfaRoutes, { prefix: '/me/2fa' })
+      await api.register(walkRoutes)
     },
     { prefix: '/api/v1' },
   )

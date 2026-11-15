@@ -126,6 +126,25 @@ export const router = createBrowserRouter([
                     lazy: page(() => import('../features/social/NewPostPage'), 'NewPostPage'),
                   },
                   {
+                    path: '/passeadores',
+                    lazy: page(() => import('../features/walks/WalkersPage'), 'WalkersPage'),
+                  },
+                  {
+                    path: '/passeadores/meu-perfil',
+                    lazy: page(
+                      () => import('../features/walks/WalkerProfilePage'),
+                      'WalkerProfilePage',
+                    ),
+                  },
+                  {
+                    path: '/passeadores/:id',
+                    lazy: page(() => import('../features/walks/WalkerPage'), 'WalkerPage'),
+                  },
+                  {
+                    path: '/passeios',
+                    lazy: page(() => import('../features/walks/WalksPage'), 'WalksPage'),
+                  },
+                  {
                     path: '/ranking',
                     lazy: page(() => import('../features/social/RankingPage'), 'RankingPage'),
                   },

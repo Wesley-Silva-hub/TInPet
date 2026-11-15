@@ -55,5 +55,13 @@ export function describeNotification(notification: Notification): { text: string
         text: `💊 Remédio hoje: ${notification.preview}`,
         to: `/pets/${notification.petId}/editar`,
       }
+    case 'WALK_REQUESTED':
+      return { text: `🦮 ${name} pediu um passeio: ${notification.preview}`, to: '/passeios' }
+    case 'WALK_ACCEPTED':
+      return { text: `✅ ${name} aceitou o passeio: ${notification.preview}`, to: '/passeios' }
+    case 'WALK_DECLINED':
+      return { text: `${name} não pode fazer o passeio: ${notification.preview}`, to: '/passeios' }
+    case 'WALK_CANCELLED':
+      return { text: `${name} cancelou o passeio: ${notification.preview}`, to: '/passeios' }
   }
 }

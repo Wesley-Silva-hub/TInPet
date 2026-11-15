@@ -22,7 +22,7 @@ export function setupTestApp() {
 
   beforeEach(async () => {
     await db.$executeRawUnsafe(
-      'TRUNCATE users, pets, swipes, matches, messages, products, refresh_tokens, password_reset_tokens, recovery_codes, blocks, reports, breeds, posts, post_likes, post_comments, post_hashtags, articles, pet_vaccines, notifications, promotions, promotion_impressions, lost_pet_alerts, pet_sightings, pet_events, event_attendees, store_reviews, stories, story_views RESTART IDENTITY CASCADE',
+      'TRUNCATE users, pets, swipes, matches, messages, products, refresh_tokens, password_reset_tokens, recovery_codes, blocks, reports, breeds, posts, post_likes, post_comments, post_hashtags, articles, pet_vaccines, notifications, promotions, promotion_impressions, lost_pet_alerts, pet_sightings, pet_events, event_attendees, store_reviews, stories, story_views, walker_profiles, walk_requests RESTART IDENTITY CASCADE',
     )
     await db.breed.createMany({
       data: [
