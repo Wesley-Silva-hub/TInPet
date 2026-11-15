@@ -5,8 +5,8 @@ name: Manter API acordada
 # e gera atividade no banco (o Supabase pausa projetos parados). Se a API cair, o job
 # falha e o GitHub avisa por e-mail. Repositório público: os minutos do Actions são grátis.
 #
-# Configure em Settings → Secrets and variables → Actions → Variables:
-#   API_HEALTH_URL = https://<servico>.onrender.com/api/v1/health
+# Endereço padrão: a API do TinPet no Render. Para outro, crie a variável API_HEALTH_URL em
+# Settings → Secrets and variables → Actions → Variables.
 on:
   schedule:
     - cron: "*/10 * * * *"
@@ -21,13 +21,12 @@ concurrency:
 jobs:
   ping:
     name: Health da API
-    if: vars.API_HEALTH_URL != ''
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Chama o health
         env:
-          API_HEALTH_URL: ${{ vars.API_HEALTH_URL }}
+          API_HEALTH_URL: ${{ vars.API_HEALTH_URL || 'https://tinpet-api.onrender.com/api/v1/health' }}
         run: >-
           curl --fail --silent --show-error --max-time 90
           --retry 3 --retry-delay 20 --retry-all-errors
