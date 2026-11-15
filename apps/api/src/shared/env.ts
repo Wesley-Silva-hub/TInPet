@@ -50,6 +50,10 @@ const envSchema = z
     MAIL_LOCAL_DIR: z.string().default('../../.data/mail'),
     MAIL_FROM: z.preprocess(emptyToUndefined, z.string().default('TinPet <onboarding@resend.dev>')),
     RESEND_API_KEY: optionalString,
+    /** Chaves VAPID do Web Push (sem as duas, o push fica desligado). */
+    VAPID_PUBLIC_KEY: optionalString,
+    VAPID_PRIVATE_KEY: optionalString,
+    VAPID_SUBJECT: z.preprocess(emptyToUndefined, z.string().default('mailto:contato@tinpet.dev')),
     /** Endereço do site, usado nos links dos e-mails (nunca o Host da requisição). */
     APP_URL: z.preprocess(emptyToUndefined, z.url().default('http://localhost:5173')),
   })

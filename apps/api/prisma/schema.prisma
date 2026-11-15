@@ -184,6 +184,7 @@ model User {
   passwordResets    PasswordResetToken[]
   recoveryCodes     RecoveryCode[]
   walkerProfile     WalkerProfile?
+  pushSubscriptions PushSubscription[]
   walksAsWalker     WalkRequest[]         @relation("WalkWalker")
   walksAsOwner      WalkRequest[]         @relation("WalkOwner")
   blocksMade        Block[]               @relation("Blocker")
@@ -839,4 +840,19 @@ model WalkRequest {
   @@index([ownerId, startsAt])
   @@index([petId])
   @@map("walk_requests")
+}
+
+/// Inscrição de push de um navegador/celular (Web Push). O endpoint identifica o aparelho.
+model PushSubscription {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  createdAt  DateTime @default(now()) @map("created_at")
+  lastUsedAt DateTime @default(now()) @map("last_used_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }

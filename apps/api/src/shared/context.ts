@@ -4,6 +4,7 @@ import type { Env } from './env'
 import { unauthorized } from './errors'
 import type { MailProvider } from './mail'
 import type { Db } from './prisma'
+import type { PushSender } from './push'
 import type { Realtime } from './realtime'
 import type { StorageProvider } from './storage/storage'
 
@@ -16,6 +17,8 @@ export interface AppDeps {
   realtime: Realtime
   /** Nulo quando o envio de e-mail está desligado. */
   mail: MailProvider | null
+  /** Nulo quando as chaves VAPID não estão configuradas. */
+  push: PushSender | null
 }
 
 declare module 'fastify' {

@@ -5,6 +5,7 @@ import type { AppDeps } from '../../shared/context'
 import { decodeCursor, encodeCursor } from '../../shared/dto'
 import { notFound } from '../../shared/errors'
 import { activeMatchOf } from '../matching/service'
+import { deliverPush } from '../push/service'
 
 interface MessageCursor {
   t: string
@@ -34,7 +35,8 @@ const toMessage = (message: {
   readAt: message.readAt?.toISOString() ?? null,
 })
 
-export function createChatService({ db, realtime }: AppDeps) {
+export function createChatService(deps: AppDeps) {
+  const { db, realtime } = deps
   /** Só participantes de um match ativo (sem unmatch nem bloqueio) acessam a conversa. */
   async function participantIds(user: AuthUser, matchId: string): Promise<[string, string]> {
     const match = await db.match.findFirst({
@@ -84,6 +86,18 @@ export function createChatService({ db, realtime }: AppDeps) {
         await db.message.create({ data: { matchId, senderId: user.id, content } }),
       )
       realtime.toUsers(owners, 'message:new', message)
+      const sender = await db.user.findUnique({ where: { id: user.id }, select: { name: true } })
+      // Uma notificação por conversa no celular: a mensagem nova substitui a anterior
+      void deliverPush(
+        deps,
+        owners.filter((id) => id !== user.id),
+        {
+          title: `Mensagem de ${sender?.name.split(' ')[0] ?? 'um tutor'}`,
+          body: content.length > 120 ? `${content.slice(0, 117)}…` : content,
+          url: `/matches/${matchId}`,
+          tag: `chat:${matchId}`,
+        },
+      ).catch(() => undefined)
       return message
     },
 

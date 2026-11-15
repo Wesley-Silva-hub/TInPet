@@ -1,8 +1,14 @@
-import type { Notification, notificationsQuerySchema, Page } from '@tinpet/shared'
+import {
+  describeNotification,
+  type Notification,
+  type notificationsQuerySchema,
+  type Page,
+} from '@tinpet/shared'
 import type { z } from 'zod'
 import type { NotificationType, Prisma } from '../../generated/prisma/client'
 import type { AppDeps } from '../../shared/context'
 import { decodeCursor, encodeCursor } from '../../shared/dto'
+import { deliverPush } from '../push/service'
 
 const PREVIEW_LENGTH = 140
 
@@ -38,7 +44,8 @@ type NotificationRow = Prisma.NotificationGetPayload<{ include: typeof notificat
  * Cria avisos e os entrega em tempo real. Nunca avisa a pessoa da própria ação, e curtir/descurtir
  * repetidamente não gera avisos duplicados.
  */
-export function createNotifier({ db, storage, realtime }: AppDeps) {
+export function createNotifier(deps: AppDeps) {
+  const { db, storage, realtime } = deps
   const toNotification = (row: NotificationRow): Notification => {
     const pet = row.pet ?? row.alert?.pet ?? null
     const petPhoto = pet?.photos[0]?.storageKey
@@ -80,7 +87,20 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
   }) {
     if (data.userId === data.actorId) return
     const row = await db.notification.create({ data, include: notificationInclude })
-    realtime.toUsers([data.userId], 'notification:new', toNotification(row))
+    const notification = toNotification(row)
+    realtime.toUsers([data.userId], 'notification:new', notification)
+    sendPush([data.userId], notification)
+  }
+
+  /** Push no celular com o mesmo texto do app; em segundo plano (nunca segura a requisição). */
+  function sendPush(userIds: string[], notification: Notification) {
+    const { text, to } = describeNotification(notification)
+    void deliverPush(deps, userIds, {
+      title: 'TinPet',
+      body: text,
+      url: to,
+      tag: `${notification.type}:${notification.postId ?? notification.matchId ?? notification.alertId ?? notification.eventId ?? notification.walkId ?? notification.petId ?? notification.id}`,
+    }).catch(() => undefined)
   }
 
   /** Mesmo aviso para muitas pessoas de uma vez (sem um evento por linha no banco). */
@@ -110,7 +130,9 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
     })
     if (sample) {
       // O payload só muda no destinatário (id da notificação), que o cliente não usa para exibir
-      realtime.toUsers(recipients, 'notification:new', toNotification(sample))
+      const notification = toNotification(sample)
+      realtime.toUsers(recipients, 'notification:new', notification)
+      sendPush(recipients, notification)
     }
   }
 
@@ -138,7 +160,11 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
       where: { id: { in: created.map((row) => row.id) } },
       include: notificationInclude,
     })
-    for (const row of rows) realtime.toUsers([row.userId], 'notification:new', toNotification(row))
+    for (const row of rows) {
+      const notification = toNotification(row)
+      realtime.toUsers([row.userId], 'notification:new', notification)
+      sendPush([row.userId], notification)
+    }
     return created.length
   }
 

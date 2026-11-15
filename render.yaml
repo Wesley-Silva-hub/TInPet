@@ -41,3 +41,10 @@ services:
         sync: false
       - key: APP_URL
         sync: false
+      # Notificações push (ver docs/deploy-gratuito.md, seção Push)
+      - key: VAPID_PUBLIC_KEY
+        sync: false
+      - key: VAPID_PRIVATE_KEY
+        sync: false
+      - key: VAPID_SUBJECT
+        sync: false

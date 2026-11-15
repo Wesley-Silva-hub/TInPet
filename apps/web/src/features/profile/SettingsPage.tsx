@@ -9,6 +9,7 @@ import { api, apiBlob, applySession, errorMessage } from '../../lib/api'
 import { useAuth, useMe } from '../../lib/auth'
 import { AppearanceCard } from './AppearanceCard'
 import { LocationCard } from './LocationCard'
+import { PushCard } from './PushCard'
 import { TwoFactorCard } from './TwoFactorCard'
 
 /** Conta e privacidade (LGPD): sair, exportar dados e excluir a conta. */
@@ -91,6 +92,8 @@ export function SettingsPage() {
       </section>
 
       <AppearanceCard />
+
+      <PushCard />
 
       <TwoFactorCard />
 

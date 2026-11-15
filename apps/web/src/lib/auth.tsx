@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { AuthResponse, LoginInput, LoginResponse, Me, RegisterInput } from '@tinpet/shared'
 import { createContext, type ReactNode, use, useEffect, useMemo, useState } from 'react'
 import { api, applySession, hasSessionHint, refreshSession, setSessionListener } from './api'
+import { disablePush } from './push'
 
 interface AuthContextValue {
   user: Me | null
@@ -53,6 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       register: async (input) =>
         start(await api<AuthResponse>('/auth/register', { method: 'POST', body: input })),
       logout: async () => {
+        // Antes de sair: este aparelho para de receber os pushes desta conta
+        await disablePush().catch(() => undefined)
         await api('/auth/logout', { method: 'POST' }).catch(() => undefined)
         applySession(null)
         queryClient.clear()

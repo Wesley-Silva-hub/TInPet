@@ -8,6 +8,7 @@ import { type App, buildApp } from '../app'
 import { loadEnv } from '../shared/env'
 import { MemoryMailProvider } from '../shared/mail'
 import { createPrisma } from '../shared/prisma'
+import { MemoryPushSender } from '../shared/push'
 import { LocalStorageProvider } from '../shared/storage/local'
 
 const env = loadEnv()
@@ -15,6 +16,8 @@ export const db = createPrisma(env.DATABASE_URL)
 export const storage = new LocalStorageProvider(mkdtempSync(join(tmpdir(), 'tinpet-test-')))
 /** E-mails enviados durante os testes. */
 export const mail = new MemoryMailProvider()
+/** Pushes enviados durante os testes. */
+export const push = new MemoryPushSender()
 
 /** App novo por arquivo de teste e banco limpo antes de cada teste. */
 export function setupTestApp() {
@@ -22,7 +25,7 @@ export function setupTestApp() {
 
   beforeEach(async () => {
     await db.$executeRawUnsafe(
-      'TRUNCATE users, pets, swipes, matches, messages, products, refresh_tokens, password_reset_tokens, recovery_codes, blocks, reports, breeds, posts, post_likes, post_comments, post_hashtags, articles, pet_vaccines, notifications, promotions, promotion_impressions, lost_pet_alerts, pet_sightings, pet_events, event_attendees, store_reviews, stories, story_views, walker_profiles, walk_requests RESTART IDENTITY CASCADE',
+      'TRUNCATE users, pets, swipes, matches, messages, products, refresh_tokens, password_reset_tokens, recovery_codes, blocks, reports, breeds, posts, post_likes, post_comments, post_hashtags, articles, pet_vaccines, notifications, promotions, promotion_impressions, lost_pet_alerts, pet_sightings, pet_events, event_attendees, store_reviews, stories, story_views, walker_profiles, walk_requests, push_subscriptions RESTART IDENTITY CASCADE',
     )
     await db.breed.createMany({
       data: [
@@ -31,7 +34,9 @@ export function setupTestApp() {
       ],
     })
     mail.outbox.length = 0
-    context.app ??= await buildApp({ env, db, storage, mail })
+    push.sent.length = 0
+    push.gone.clear()
+    context.app ??= await buildApp({ env, db, storage, mail, push })
   })
 
   afterAll(async () => {

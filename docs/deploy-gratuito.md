@@ -78,6 +78,19 @@ Sem esta etapa o app funciona normalmente; a tela "Esqueci minha senha" só avis
 
 Em desenvolvimento cada e-mail vira um arquivo `.html` em `.data/mail/`; abra no navegador e clique no link.
 
+## Push: notificações no celular (opcional) 👤
+
+Sem esta etapa o app funciona normalmente; o cartão "Notificações no celular" só avisa que ainda não está disponível. É grátis (o envio usa os serviços de push do Google, Mozilla e Apple).
+
+1. No seu computador, gere o par de chaves VAPID:
+   ```bash
+   pnpm --filter @tinpet/api exec web-push generate-vapid-keys
+   ```
+2. No Render, em *Environment* do `tinpet-api`, cadastre `VAPID_PUBLIC_KEY` e `VAPID_PRIVATE_KEY` com os valores gerados, e `VAPID_SUBJECT` = `mailto:seu-email@exemplo.com`.
+3. Salve; o Render reinicia a API. Em *Configurações → Notificações no celular*, toque em **Ativar**.
+
+Guarde as chaves no gerenciador de senhas: se forem trocadas, todo mundo precisa ativar de novo. No iPhone o push só funciona com o TinPet instalado na tela inicial (Safari → Compartilhar → Adicionar à Tela de Início).
+
 ## 4. Verificação
 
 - Abra o site, crie uma conta, permita a localização e cadastre um pet com foto.

@@ -30,6 +30,7 @@ import { notificationRoutes } from './modules/notifications/routes'
 import { petRoutes } from './modules/pets/routes'
 import { productRoutes } from './modules/products/routes'
 import { promotionRoutes } from './modules/promotions/routes'
+import { pushRoutes } from './modules/push/routes'
 import { safetyRoutes } from './modules/safety/routes'
 import { socialRoutes } from './modules/social/routes'
 import { storeRoutes } from './modules/stores/routes'
@@ -43,6 +44,7 @@ import { registerErrorHandler } from './shared/errors'
 import { MAX_UPLOAD_BYTES } from './shared/images'
 import { createMail, type MailProvider } from './shared/mail'
 import type { Db } from './shared/prisma'
+import { createPush, type PushSender } from './shared/push'
 import { createRealtime } from './shared/realtime'
 import { LOCAL_FILES_ROUTE, LocalStorageProvider } from './shared/storage/local'
 import type { StorageProvider } from './shared/storage/storage'
@@ -53,6 +55,7 @@ export interface BuildAppOptions {
   storage: StorageProvider
   /** Testes passam uma caixa em memória; sem isso vem do env. */
   mail?: MailProvider | null
+  push?: PushSender | null
 }
 
 function loggerOptions(env: Env): FastifyServerOptions['logger'] {
@@ -67,7 +70,7 @@ function loggerOptions(env: Env): FastifyServerOptions['logger'] {
 }
 
 /** Monta a aplicação sem abrir porta (usado pelo server.ts e pelos testes). */
-export async function buildApp({ env, db, storage, mail }: BuildAppOptions) {
+export async function buildApp({ env, db, storage, mail, push }: BuildAppOptions) {
   const app = Fastify({
     logger: loggerOptions(env),
     trustProxy: env.TRUST_PROXY,
@@ -88,6 +91,7 @@ export async function buildApp({ env, db, storage, mail }: BuildAppOptions) {
     tokens,
     realtime,
     mail: mail === undefined ? createMail(env) : mail,
+    push: push === undefined ? createPush(env) : push,
   }
   app.decorate('deps', deps)
   app.addHook('onClose', async () => {
@@ -177,6 +181,7 @@ export async function buildApp({ env, db, storage, mail }: BuildAppOptions) {
       await api.register(storyRoutes, { prefix: '/stories' })
       await api.register(mfaRoutes, { prefix: '/me/2fa' })
       await api.register(walkRoutes)
+      await api.register(pushRoutes, { prefix: '/push' })
     },
     { prefix: '/api/v1' },
   )
