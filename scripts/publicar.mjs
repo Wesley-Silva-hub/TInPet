@@ -12,7 +12,8 @@ const SITE_NAME = 'tinpetv1'
 const targets = process.argv.slice(2)
 const wants = (name) => targets.length === 0 || targets.includes(name)
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-const log = (area, message) => console.log(`[${area}] ${message}`)
+const log = (area, message) => process.stdout.write(`[${area}] ${message}
+`)
 
 const env = Object.fromEntries(
   readFileSync(join(ROOT, '.env.deploy'), 'utf8')
