@@ -31,3 +31,13 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
+      # Esqueci minha senha (ver docs/deploy-gratuito.md, seção E-mail). Sem MAIL_DRIVER fica
+      # desligado; só defina resend depois de cadastrar a RESEND_API_KEY (senão a API não sobe)
+      - key: MAIL_DRIVER
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: APP_URL
+        sync: false

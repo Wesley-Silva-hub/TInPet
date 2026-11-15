@@ -36,3 +36,15 @@ export const authResponseSchema = z.object({
   user: meSchema,
 })
 export type AuthResponse = z.infer<typeof authResponseSchema>
+
+/** Validade do link de "esqueci minha senha". */
+export const PASSWORD_RESET_TTL_MINUTES = 30
+
+export const forgotPasswordSchema = z.object({ email: emailSchema })
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(20).max(200),
+  password: passwordSchema,
+})
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>

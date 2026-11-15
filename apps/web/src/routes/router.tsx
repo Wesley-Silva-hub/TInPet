@@ -43,6 +43,14 @@ export const router = createBrowserRouter([
       },
       { path: '/termos', lazy: page(() => import('../features/landing/TermsPage'), 'TermsPage') },
       {
+        path: '/esqueci-senha',
+        lazy: page(() => import('../features/auth/ForgotPasswordPage'), 'ForgotPasswordPage'),
+      },
+      {
+        path: '/redefinir-senha/:token',
+        lazy: page(() => import('../features/auth/ResetPasswordPage'), 'ResetPasswordPage'),
+      },
+      {
         path: '/p/:code',
         lazy: page(() => import('../features/lostPets/PublicTagPage'), 'PublicTagPage'),
       },

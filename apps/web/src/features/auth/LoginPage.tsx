@@ -46,6 +46,12 @@ export function LoginPage() {
             />
           )}
         </Field>
+        <Link
+          to="/esqueci-senha"
+          className="-mt-2 self-end text-sm font-semibold text-brand-600 underline"
+        >
+          Esqueci minha senha
+        </Link>
         <Button type="submit" loading={isSubmitting} className="mt-2">
           Entrar
         </Button>

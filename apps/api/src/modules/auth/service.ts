@@ -1,11 +1,18 @@
 import { randomUUID } from 'node:crypto'
-import type { registerSchema } from '@tinpet/shared'
+import { PASSWORD_RESET_TTL_MINUTES, type registerSchema } from '@tinpet/shared'
 import argon2 from 'argon2'
 import type { z } from 'zod'
 import { hashToken, newOpaqueToken, REFRESH_TOKEN_TTL_MS } from '../../shared/auth'
 import type { AppDeps } from '../../shared/context'
 import { meInclude, toMe } from '../../shared/dto'
-import { AppError, conflict, isUniqueViolation, unauthorized } from '../../shared/errors'
+import {
+  AppError,
+  badRequest,
+  conflict,
+  isUniqueViolation,
+  unauthorized,
+} from '../../shared/errors'
+import type { MailMessage } from '../../shared/mail'
 import type { Db } from '../../shared/prisma'
 
 /** Janela em que um refresh token recém-rotacionado ainda é tolerado (requisições simultâneas). */
@@ -17,12 +24,17 @@ export const EXPIRED_TOKEN_RETENTION_MS = 30 * 24 * 60 * 60 * 1000
 export const accountSuspended = () =>
   new AppError(403, 'ACCOUNT_SUSPENDED', 'Esta conta foi suspensa por violar os termos de uso')
 
-/** Apaga refresh tokens vencidos há mais de 30 dias. Retorna quantos foram removidos. */
+/** Apaga refresh tokens vencidos há mais de 30 dias e links de senha vencidos. Retorna o total. */
 export async function cleanupExpiredRefreshTokens(db: Db, now = new Date()) {
-  const { count } = await db.refreshToken.deleteMany({
-    where: { expiresAt: { lt: new Date(now.getTime() - EXPIRED_TOKEN_RETENTION_MS) } },
-  })
-  return count
+  const cutoff = new Date(now.getTime() - EXPIRED_TOKEN_RETENTION_MS)
+  const [refresh, resets] = await db.$transaction([
+    db.refreshToken.deleteMany({ where: { expiresAt: { lt: cutoff } } }),
+    // Links de senha vencidos não servem para nada (nem auditoria): saem depois de 1 dia
+    db.passwordResetToken.deleteMany({
+      where: { expiresAt: { lt: new Date(now.getTime() - 24 * 60 * 60 * 1000) } },
+    }),
+  ])
+  return refresh.count + resets.count
 }
 
 // Hash fixo usado para gastar o mesmo tempo quando o e-mail não existe (evita enumeração por timing).
@@ -30,7 +42,32 @@ let dummyHash: Promise<string> | undefined
 
 type RegisterData = z.output<typeof registerSchema>
 
-export function createAuthService({ db, storage, tokens }: AppDeps) {
+const mailUnavailable = () =>
+  new AppError(
+    503,
+    'MAIL_UNAVAILABLE',
+    'A recuperação de senha ainda não está disponível. Fale com o suporte do TinPet.',
+  )
+
+const escapeHtml = (value: string) =>
+  value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`)
+
+function resetEmail(to: string, name: string, link: string): MailMessage {
+  const first = escapeHtml(name.split(' ')[0] ?? name)
+  return {
+    to,
+    subject: 'Redefinir sua senha do TinPet',
+    text: `Oi, ${name.split(' ')[0]}! Para criar uma senha nova, abra: ${link}\n\nO link vale ${PASSWORD_RESET_TTL_MINUTES} minutos e só pode ser usado uma vez. Se não foi você, ignore este e-mail: sua senha continua a mesma.`,
+    html: `<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;color:#1f1a17">
+  <h1 style="color:#ef5b4c">TinPet 🐾</h1>
+  <p>Oi, ${first}! Recebemos um pedido para redefinir a sua senha.</p>
+  <p><a href="${escapeHtml(link)}" style="display:inline-block;background:#ef5b4c;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:bold">Criar senha nova</a></p>
+  <p style="color:#6b625c">O link vale ${PASSWORD_RESET_TTL_MINUTES} minutos e só pode ser usado uma vez. Se não foi você, ignore este e-mail: sua senha continua a mesma.</p>
+</div>`,
+  }
+}
+
+export function createAuthService({ db, storage, tokens, mail, env }: AppDeps) {
   async function startSession(userId: string, familyId?: string) {
     const user = await db.user.findUniqueOrThrow({ where: { id: userId }, include: meInclude })
     const refresh = newOpaqueToken()
@@ -128,6 +165,62 @@ export function createAuthService({ db, storage, tokens }: AppDeps) {
       })
       if (owner?.suspendedAt) throw accountSuspended()
       return startSession(stored.userId, stored.familyId)
+    },
+
+    /**
+     * Gera o link de redefinição e manda por e-mail. A resposta é a mesma exista ou não a conta
+     * (não revela quem tem cadastro) e o envio não segura a requisição.
+     */
+    async forgotPassword(email: string, onSendError: (error: unknown) => void) {
+      if (!mail) throw mailUnavailable()
+      const user = await db.user.findUnique({
+        where: { email },
+        select: { id: true, name: true, suspendedAt: true },
+      })
+      if (!user || user.suspendedAt) return
+      const reset = newOpaqueToken()
+      await db.$transaction([
+        // Só o link mais recente vale
+        db.passwordResetToken.deleteMany({ where: { userId: user.id, usedAt: null } }),
+        db.passwordResetToken.create({
+          data: {
+            userId: user.id,
+            tokenHash: reset.hash,
+            expiresAt: new Date(Date.now() + PASSWORD_RESET_TTL_MINUTES * 60_000),
+          },
+        }),
+      ])
+      const link = `${env.APP_URL.replace(/\/$/, '')}/redefinir-senha/${reset.token}`
+      void mail.send(resetEmail(email, user.name, link)).catch(onSendError)
+    },
+
+    /** Troca a senha pelo link do e-mail e derruba todas as sessões abertas. */
+    async resetPassword(token: string, password: string) {
+      const stored = await db.passwordResetToken.findUnique({
+        where: { tokenHash: hashToken(token) },
+      })
+      if (!stored || stored.usedAt || stored.expiresAt < new Date()) {
+        throw badRequest('INVALID_RESET_TOKEN', 'Link inválido ou expirado. Peça um novo.')
+      }
+      const now = new Date()
+      // Atualização condicional: o mesmo link não serve duas vezes nem em requisições simultâneas
+      const claimed = await db.passwordResetToken.updateMany({
+        where: { id: stored.id, usedAt: null },
+        data: { usedAt: now },
+      })
+      if (claimed.count === 0) {
+        throw badRequest('INVALID_RESET_TOKEN', 'Link inválido ou expirado. Peça um novo.')
+      }
+      await db.$transaction([
+        db.user.update({
+          where: { id: stored.userId },
+          data: { passwordHash: await argon2.hash(password) },
+        }),
+        db.refreshToken.updateMany({
+          where: { userId: stored.userId, revokedAt: null },
+          data: { revokedAt: now },
+        }),
+      ])
     },
 
     /** Revoga todas as sessões do usuário (outros celulares e navegadores precisam entrar de novo). */

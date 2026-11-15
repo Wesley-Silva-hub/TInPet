@@ -1,4 +1,10 @@
-import { authResponseSchema, loginSchema, registerSchema } from '@tinpet/shared'
+import {
+  authResponseSchema,
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  resetPasswordSchema,
+} from '@tinpet/shared'
 import type { FastifyReply } from 'fastify'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
@@ -68,6 +74,33 @@ export const authRoutes: FastifyPluginAsyncZod = async (app) => {
     { schema: { tags: ['auth'], response: { 204: z.null() } } },
     async (request, reply) => {
       await service.logout(request.cookies[REFRESH_COOKIE])
+      reply.clearCookie(REFRESH_COOKIE, { path: REFRESH_COOKIE_PATH })
+      return reply.status(204).send(null)
+    },
+  )
+
+  app.post(
+    '/forgot-password',
+    {
+      config: { rateLimit: { max: 5, timeWindow: '15 minutes' } },
+      schema: { tags: ['auth'], body: forgotPasswordSchema, response: { 204: z.null() } },
+    },
+    async (request, reply) => {
+      await service.forgotPassword(request.body.email, (error) =>
+        request.log.error({ err: error }, 'falha ao enviar e-mail de redefinição'),
+      )
+      return reply.status(204).send(null)
+    },
+  )
+
+  app.post(
+    '/reset-password',
+    {
+      config: authRateLimit,
+      schema: { tags: ['auth'], body: resetPasswordSchema, response: { 204: z.null() } },
+    },
+    async (request, reply) => {
+      await service.resetPassword(request.body.token, request.body.password)
       reply.clearCookie(REFRESH_COOKIE, { path: REFRESH_COOKIE_PATH })
       return reply.status(204).send(null)
     },

@@ -63,6 +63,21 @@ Consequências práticas:
 
 O front chama `/api/*` no próprio Netlify, que repassa ao Render: para o navegador é a mesma origem, e o cookie de sessão funciona sem configuração extra. Cada PR ganha um *Deploy Preview* com link próprio (sem gastar créditos).
 
+## E-mail: esqueci minha senha (opcional) 👤
+
+Sem esta etapa o app funciona normalmente; a tela "Esqueci minha senha" só avisa que o recurso ainda não está disponível.
+
+1. Crie uma conta grátis em [resend.com](https://resend.com) (3 mil e-mails/mês) e gere uma **API Key** com permissão de envio.
+2. (Recomendado) Em *Domains*, verifique um domínio seu. Sem domínio, o remetente `onboarding@resend.dev` só entrega para o e-mail da própria conta do Resend, o que serve para testar.
+3. No Render, em *Environment* do serviço `tinpet-api`, cadastre nesta ordem:
+   - `RESEND_API_KEY` = a chave do passo 1;
+   - `MAIL_FROM` = `TinPet <nao-responda@seudominio.com>` (ou `TinPet <onboarding@resend.dev>` para testar);
+   - `APP_URL` = a URL do site no Netlify, ex.: `https://seu-site.netlify.app`;
+   - `MAIL_DRIVER` = `resend` (por último: com `resend` e sem chave, a API não sobe).
+4. Salve; o Render reinicia a API. Teste em *Entrar → Esqueci minha senha*.
+
+Em desenvolvimento cada e-mail vira um arquivo `.html` em `.data/mail/`; abra no navegador e clique no link.
+
 ## 4. Verificação
 
 - Abra o site, crie uma conta, permita a localização e cadastre um pet com foto.

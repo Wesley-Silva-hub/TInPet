@@ -39,6 +39,7 @@ import { type AppDeps, registerAuthentication } from './shared/context'
 import { type Env, isProduction } from './shared/env'
 import { registerErrorHandler } from './shared/errors'
 import { MAX_UPLOAD_BYTES } from './shared/images'
+import { createMail, type MailProvider } from './shared/mail'
 import type { Db } from './shared/prisma'
 import { createRealtime } from './shared/realtime'
 import { LOCAL_FILES_ROUTE, LocalStorageProvider } from './shared/storage/local'
@@ -48,6 +49,8 @@ export interface BuildAppOptions {
   env: Env
   db: Db
   storage: StorageProvider
+  /** Testes passam uma caixa em memória; sem isso vem do env. */
+  mail?: MailProvider | null
 }
 
 function loggerOptions(env: Env): FastifyServerOptions['logger'] {
@@ -62,7 +65,7 @@ function loggerOptions(env: Env): FastifyServerOptions['logger'] {
 }
 
 /** Monta a aplicação sem abrir porta (usado pelo server.ts e pelos testes). */
-export async function buildApp({ env, db, storage }: BuildAppOptions) {
+export async function buildApp({ env, db, storage, mail }: BuildAppOptions) {
   const app = Fastify({
     logger: loggerOptions(env),
     trustProxy: env.TRUST_PROXY,
@@ -76,7 +79,14 @@ export async function buildApp({ env, db, storage }: BuildAppOptions) {
 
   const tokens = new TokenService(env.JWT_SECRET)
   const { io, realtime } = createRealtime(app.server, tokens, env.CORS_ORIGINS)
-  const deps: AppDeps = { env, db, storage, tokens, realtime }
+  const deps: AppDeps = {
+    env,
+    db,
+    storage,
+    tokens,
+    realtime,
+    mail: mail === undefined ? createMail(env) : mail,
+  }
   app.decorate('deps', deps)
   app.addHook('onClose', async () => {
     await io.close()

@@ -2,6 +2,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { type AuthUser, bearerToken, type TokenService } from './auth'
 import type { Env } from './env'
 import { unauthorized } from './errors'
+import type { MailProvider } from './mail'
 import type { Db } from './prisma'
 import type { Realtime } from './realtime'
 import type { StorageProvider } from './storage/storage'
@@ -13,6 +14,8 @@ export interface AppDeps {
   storage: StorageProvider
   tokens: TokenService
   realtime: Realtime
+  /** Nulo quando o envio de e-mail está desligado. */
+  mail: MailProvider | null
 }
 
 declare module 'fastify' {

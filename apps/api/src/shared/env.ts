@@ -4,6 +4,9 @@ const booleanFromString = z
   .enum(['true', 'false', '1', '0'])
   .transform((value) => value === 'true' || value === '1')
 
+/** Variável criada vazia no painel da plataforma vale como não definida. */
+const emptyToUndefined = (value: unknown) => (value === '' ? undefined : value)
+
 const optionalString = z
   .string()
   .optional()
@@ -42,6 +45,13 @@ const envSchema = z
     S3_ACCESS_KEY_ID: optionalString,
     S3_SECRET_ACCESS_KEY: optionalString,
     S3_PUBLIC_URL: optionalString,
+    /** file = grava o e-mail em arquivo (dev); resend = envia de verdade; none = desligado. */
+    MAIL_DRIVER: z.preprocess(emptyToUndefined, z.enum(['file', 'resend', 'none']).optional()),
+    MAIL_LOCAL_DIR: z.string().default('../../.data/mail'),
+    MAIL_FROM: z.preprocess(emptyToUndefined, z.string().default('TinPet <onboarding@resend.dev>')),
+    RESEND_API_KEY: optionalString,
+    /** Endereço do site, usado nos links dos e-mails (nunca o Host da requisição). */
+    APP_URL: z.preprocess(emptyToUndefined, z.url().default('http://localhost:5173')),
   })
   .superRefine((env, ctx) => {
     const require = (keys: (keyof typeof env)[]) => {
@@ -58,6 +68,24 @@ const envSchema = z
     if (env.STORAGE_DRIVER === 'supabase') require(['SUPABASE_URL', 'SUPABASE_SERVICE_KEY'])
     if (env.STORAGE_DRIVER === 's3') {
       require(['S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_PUBLIC_URL'])
+    }
+    if (env.MAIL_DRIVER === 'resend' && !env.RESEND_API_KEY) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['RESEND_API_KEY'],
+        message: 'obrigatória com MAIL_DRIVER=resend',
+      })
+    }
+    if (
+      env.MAIL_DRIVER === 'resend' &&
+      env.NODE_ENV === 'production' &&
+      new URL(env.APP_URL).hostname === 'localhost'
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['APP_URL'],
+        message: 'defina a URL do site (os links do e-mail apontariam para localhost)',
+      })
     }
   })
 
@@ -76,3 +104,6 @@ export function loadEnv(source: NodeJS.ProcessEnv = process.env): Env {
 }
 
 export const isProduction = (env: Env) => env.NODE_ENV === 'production'
+
+/** Sem configuração: arquivo local em dev e desligado em produção (nunca finge que enviou). */
+export const mailDriverOf = (env: Env) => env.MAIL_DRIVER ?? (isProduction(env) ? 'none' : 'file')
