@@ -69,15 +69,18 @@ Fonte: [docs/notion/documentacao.md](notion/documentacao.md), seções *Ideias d
 | 7 | **Esqueci minha senha** | Link por e-mail (30 min, uso único, só o hash no banco), derruba as sessões; arquivo local em dev e Resend em produção | Feito (falta cadastrar a chave do Resend: ver deploy-gratuito.md) |
 | 8 | **Esconder contas suspensas** | Posts, pets, perfil, loja, ofertas, matches e alertas da conta somem para os outros | Feito |
 | 9 | **Linha do tempo do pet** (PetMemories) | Nascimento, chegada, fotos e reencontro (públicos) e vacinas, consultas, peso e 1º match (só o tutor) | Feito |
+| 10 | **Verificação em duas etapas** | App autenticador (TOTP, sem dependência nova), segredo cifrado, códigos de recuperação | Feito |
+| 11 | **Passeadores** | Perfil de passeador (preço, bairros, dias), pedido, aceite/recusa, cancelar e concluir com avisos; pagamento combinado direto | Feito |
+| 12 | **Notificações push** | Todo aviso do app e as mensagens do chat no celular, mesmo com o app fechado | Feito (falta cadastrar as chaves VAPID: ver deploy-gratuito.md) |
+| 13 | **Saúde da raça** | O que observar e o cuidado que mais ajuda, para as 32 raças do catálogo | Feito (conteúdo deve ser revisado por um veterinário) |
 
-### Depois (dependem de conta, conteúdo revisado ou decisão de produto)
+### Depois
 
 | Entrega | Por que esperar |
 |---|---|
-| Notificações push (PWA) | Chaves VAPID; aproveita os lembretes da fase 3. |
-| Doenças comuns por raça | Conteúdo de saúde precisa de revisão de um veterinário antes de publicar. |
-| Dog walker | Novo papel de usuário, agenda e, depois, pagamento: decisão de modelo de negócio. |
-| Autenticação em dois fatores | TOTP pede biblioteca nova (justificar no PR) ou e-mail (depende do Resend). |
+| Revisão veterinária da saúde da raça | Conteúdo informativo já publicado; um veterinário deve revisar e assinar. |
+| Avaliações de passeadores | Reaproveita as avaliações de lojas depois que houver passeios feitos. |
+| App mobile (React Native) | Reaproveita packages/shared; falta definir o refresh token no mobile. |
 
 Cada entrega segue o fluxo do CONTRIBUTING: branch curta, migration quando houver, teste de integração da regra principal e PR com CI verde.
 
