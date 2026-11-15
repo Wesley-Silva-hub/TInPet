@@ -62,10 +62,10 @@ Fonte: [docs/notion/documentacao.md](notion/documentacao.md), seções *Ideias d
 |---|---|---|---|
 | 1 | **Eventos de pets na região** | Criar evento (avisa tutores a 10 km), lista por distância, "Vou!", cancelar avisando quem ia | Feito |
 | 2 | **Avaliações de lojas** | 1 a 5 estrelas + comentário, uma por tutor, média na lista e na loja | Feito |
-| 3 | **Saúde completa** | Remédios com horário e período, histórico de consultas/exames/peso, e rotina diária que **avisa** reforço de vacina (7 dias antes e no dia) e remédio do dia | Esta rodada |
-| 4 | **Hashtags** | `#tags` nas legendas viram links, página da hashtag e "tags em alta" no Início | Esta rodada |
-| 5 | **Ranking da região** | Pets mais curtidos nos últimos 30 dias num raio de 50 km | Esta rodada |
-| 6 | **Stories de 24 h** | Foto que some em 24 h, barra de stories no Início, visualizador em tela cheia; rotina apaga os vencidos e os arquivos | Esta rodada |
+| 3 | **Saúde completa** | Remédios com horário e período, histórico de consultas/exames/peso, e rotina diária que **avisa** reforço de vacina (7 dias antes e no dia) e remédio do dia | Feito |
+| 4 | **Hashtags** | `#tags` nas legendas viram links, página da hashtag e "tags em alta" no Início | Feito |
+| 5 | **Ranking da região** | Pets mais curtidos nos últimos 30 dias num raio de 50 km | Feito |
+| 6 | **Stories de 24 h** | Foto que some em 24 h, barra de stories no Início, visualizador em tela cheia; rotina apaga os vencidos e os arquivos | Feito |
 
 ### Depois (dependem de conta, conteúdo revisado ou decisão de produto)
 
