@@ -118,6 +118,10 @@ export const router = createBrowserRouter([
                     lazy: page(() => import('../features/social/NewPostPage'), 'NewPostPage'),
                   },
                   {
+                    path: '/ranking',
+                    lazy: page(() => import('../features/social/RankingPage'), 'RankingPage'),
+                  },
+                  {
                     path: '/tags/:tag',
                     lazy: page(() => import('../features/social/TagPage'), 'TagPage'),
                   },

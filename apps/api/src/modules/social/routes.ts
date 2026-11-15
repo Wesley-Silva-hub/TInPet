@@ -8,12 +8,15 @@ import {
   postFieldsSchema,
   postSchema,
   postsQuerySchema,
+  rankingQuerySchema,
+  rankingSchema,
   trendingHashtagSchema,
 } from '@tinpet/shared'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { AppError } from '../../shared/errors'
 import { readUpload } from '../../shared/images'
+import { createRankingService } from './ranking'
 import { createSocialService } from './service'
 
 /** Campos de texto do multipart chegam como { value }; só os que vêm antes do arquivo. */
@@ -46,6 +49,13 @@ export const socialRoutes: FastifyPluginAsyncZod = async (app) => {
     '/posts/trending',
     { schema: { ...base, response: { 200: z.array(postSchema) } } },
     (request) => service.trending(request.auth),
+  )
+
+  const ranking = createRankingService(app.deps)
+  app.get(
+    '/ranking',
+    { schema: { ...base, querystring: rankingQuerySchema, response: { 200: rankingSchema } } },
+    (request) => ranking.ranking(request.auth, request.query),
   )
 
   app.get(

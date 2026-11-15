@@ -21,6 +21,7 @@ import { useOffers } from '../marketplace/offers'
 import { SponsoredCard } from '../marketplace/SponsoredCard'
 import { PostCard } from './PostCard'
 import { usePosts } from './queries'
+import { RankingTeaser } from './RankingPage'
 import { TrendingTags } from './TrendingTags'
 
 const AD_EVERY = 4
@@ -51,6 +52,7 @@ export function HomePage() {
       {items.length > 0 && <PetHighlights posts={items} />}
       <Trending />
       <TrendingTags />
+      <RankingTeaser />
       <NewsStrip />
 
       {posts.isPending && (
