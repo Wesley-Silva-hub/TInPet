@@ -112,8 +112,37 @@ export function createNotifier({ db, storage, realtime }: AppDeps) {
     }
   }
 
+  /**
+   * Lembretes automáticos (sem autor). A `dedupKey` única faz a rotina poder rodar quantas vezes
+   * for preciso (a API hiberna e acorda) sem nunca repetir o mesmo aviso.
+   */
+  async function remind(
+    items: {
+      userId: string
+      type: NotificationType
+      petId: string
+      preview: string
+      dedupKey: string
+    }[],
+  ) {
+    if (items.length === 0) return 0
+    const created = await db.notification.createManyAndReturn({
+      data: items.map((item) => ({ ...item, preview: item.preview.slice(0, PREVIEW_LENGTH) })),
+      skipDuplicates: true,
+      select: { id: true },
+    })
+    if (created.length === 0) return 0
+    const rows = await db.notification.findMany({
+      where: { id: { in: created.map((row) => row.id) } },
+      include: notificationInclude,
+    })
+    for (const row of rows) realtime.toUsers([row.userId], 'notification:new', toNotification(row))
+    return created.length
+  }
+
   return {
     toNotification,
+    remind,
 
     async postLiked(actorId: string, postId: string) {
       const post = await db.post.findUnique({ where: { id: postId }, select: { authorId: true } })

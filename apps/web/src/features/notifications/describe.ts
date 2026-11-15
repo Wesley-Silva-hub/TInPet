@@ -45,5 +45,15 @@ export function describeNotification(notification: Notification): { text: string
         text: `Evento cancelado: ${notification.preview}`,
         to: `/eventos/${notification.eventId}`,
       }
+    case 'VACCINE_DUE':
+      return {
+        text: `💉 ${notification.preview}. Já marcou o veterinário?`,
+        to: `/pets/${notification.petId}/editar`,
+      }
+    case 'MEDICATION_TODAY':
+      return {
+        text: `💊 Remédio hoje: ${notification.preview}`,
+        to: `/pets/${notification.petId}/editar`,
+      }
   }
 }

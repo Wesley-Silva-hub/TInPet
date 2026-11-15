@@ -7,8 +7,10 @@ import {
   Heart,
   MessageCircle,
   PartyPopper,
+  Pill,
   Siren,
   Sparkles,
+  Syringe,
 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef } from 'react'
@@ -30,6 +32,8 @@ const icons = {
   LOST_PET_FOUND: { icon: PartyPopper, className: 'bg-leaf-500 text-white' },
   EVENT_NEARBY: { icon: CalendarHeart, className: 'bg-sky-600 text-white' },
   EVENT_CANCELLED: { icon: CalendarX, className: 'bg-ink text-canvas' },
+  VACCINE_DUE: { icon: Syringe, className: 'bg-amber-500 text-white' },
+  MEDICATION_TODAY: { icon: Pill, className: 'bg-leaf-500 text-white' },
 } as const satisfies Record<Notification['type'], unknown>
 
 export function NotificationsPage() {

@@ -64,3 +64,19 @@ describe('avisos de eventos', () => {
     )
   })
 })
+
+describe('lembretes de saúde', () => {
+  it('vacina e remédio levam para a ficha do pet', () => {
+    const health = { ...base, alertId: null, petId: '00000000-0000-4000-8000-000000000006' }
+    const vaccine = describeNotification({
+      ...health,
+      type: 'VACCINE_DUE',
+      preview: 'Antirrábica de Mel vence em 5 dias (19/11/2026)',
+    })
+    expect(vaccine.to).toBe(`/pets/${health.petId}/editar`)
+    expect(vaccine.text).toContain('Antirrábica de Mel vence em 5 dias')
+    expect(describeNotification({ ...health, type: 'MEDICATION_TODAY' }).text).toMatch(
+      /^💊 Remédio hoje/,
+    )
+  })
+})

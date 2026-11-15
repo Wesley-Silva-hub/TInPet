@@ -1,5 +1,9 @@
 import {
+  healthRecordInputSchema,
+  healthRecordSchema,
   idParamsSchema,
+  medicationInputSchema,
+  medicationSchema,
   vaccineInputSchema,
   vaccineReminderSchema,
   vaccineSchema,
@@ -38,6 +42,76 @@ export const healthRoutes: FastifyPluginAsyncZod = async (app) => {
     { schema: { ...base, params: idParamsSchema, response: { 204: z.null() } } },
     async (request, reply) => {
       await service.remove(request.auth, request.params.id)
+      return reply.status(204).send(null)
+    },
+  )
+
+  app.get(
+    '/pets/:id/medications',
+    { schema: { ...base, params: idParamsSchema, response: { 200: z.array(medicationSchema) } } },
+    (request) => service.listMedications(request.auth, request.params.id),
+  )
+
+  app.post(
+    '/pets/:id/medications',
+    {
+      schema: {
+        ...base,
+        params: idParamsSchema,
+        body: medicationInputSchema,
+        response: { 201: medicationSchema },
+      },
+    },
+    async (request, reply) =>
+      reply
+        .status(201)
+        .send(await service.addMedication(request.auth, request.params.id, request.body)),
+  )
+
+  app.post(
+    '/medications/:id/finish',
+    { schema: { ...base, params: idParamsSchema, response: { 200: medicationSchema } } },
+    (request) => service.finishMedication(request.auth, request.params.id),
+  )
+
+  app.delete(
+    '/medications/:id',
+    { schema: { ...base, params: idParamsSchema, response: { 204: z.null() } } },
+    async (request, reply) => {
+      await service.removeMedication(request.auth, request.params.id)
+      return reply.status(204).send(null)
+    },
+  )
+
+  app.get(
+    '/pets/:id/health-records',
+    {
+      schema: { ...base, params: idParamsSchema, response: { 200: z.array(healthRecordSchema) } },
+    },
+    (request) => service.listRecords(request.auth, request.params.id),
+  )
+
+  app.post(
+    '/pets/:id/health-records',
+    {
+      schema: {
+        ...base,
+        params: idParamsSchema,
+        body: healthRecordInputSchema,
+        response: { 201: healthRecordSchema },
+      },
+    },
+    async (request, reply) =>
+      reply
+        .status(201)
+        .send(await service.addRecord(request.auth, request.params.id, request.body)),
+  )
+
+  app.delete(
+    '/health-records/:id',
+    { schema: { ...base, params: idParamsSchema, response: { 204: z.null() } } },
+    async (request, reply) => {
+      await service.removeRecord(request.auth, request.params.id)
       return reply.status(204).send(null)
     },
   )

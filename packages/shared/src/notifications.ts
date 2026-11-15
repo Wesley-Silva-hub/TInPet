@@ -10,6 +10,8 @@ export const notificationTypes = [
   'LOST_PET_FOUND',
   'EVENT_NEARBY',
   'EVENT_CANCELLED',
+  'VACCINE_DUE',
+  'MEDICATION_TODAY',
 ] as const
 export const notificationTypeSchema = z.enum(notificationTypes)
 export type NotificationType = z.infer<typeof notificationTypeSchema>

@@ -101,7 +101,15 @@ export function createUserService({ db, storage }: AppDeps) {
         where: { id: userId },
         include: {
           ...meInclude,
-          pets: { include: { ...petInclude, swipesMade: true } },
+          pets: {
+            include: {
+              ...petInclude,
+              swipesMade: true,
+              vaccines: true,
+              medications: true,
+              healthRecords: true,
+            },
+          },
           products: true,
           messages: { orderBy: { createdAt: 'asc' } },
           posts: { orderBy: { createdAt: 'asc' } },
@@ -135,6 +143,9 @@ export function createUserService({ db, storage }: AppDeps) {
             direction: swipe.direction,
             createdAt: swipe.createdAt.toISOString(),
           })),
+          vaccines: pet.vaccines.map(({ petId: _pet, ...vaccine }) => vaccine),
+          medications: pet.medications.map(({ petId: _pet, ...medication }) => medication),
+          healthRecords: pet.healthRecords.map(({ petId: _pet, ...record }) => record),
         })),
         products: user.products.map((product) => ({
           ...product,

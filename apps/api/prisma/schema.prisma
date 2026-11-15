@@ -89,6 +89,18 @@ enum NotificationType {
   EVENT_NEARBY
   /// Evento em que você confirmou presença foi cancelado
   EVENT_CANCELLED
+  /// Reforço de vacina chegando (7 dias antes) ou vencendo hoje
+  VACCINE_DUE
+  /// Remédio a dar hoje
+  MEDICATION_TODAY
+}
+
+enum HealthRecordKind {
+  CONSULTATION
+  EXAM
+  SURGERY
+  WEIGHT
+  OTHER
 }
 
 enum LostPetStatus {
@@ -233,15 +245,17 @@ model Pet {
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 
-  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  breed          Breed?         @relation(fields: [breedId], references: [id], onDelete: SetNull)
+  owner          User              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  breed          Breed?            @relation(fields: [breedId], references: [id], onDelete: SetNull)
   photos         PetPhoto[]
-  swipesMade     Swipe[]        @relation("SwipeFrom")
-  swipesReceived Swipe[]        @relation("SwipeTo")
-  matchesAsA     Match[]        @relation("MatchPetA")
-  matchesAsB     Match[]        @relation("MatchPetB")
+  swipesMade     Swipe[]           @relation("SwipeFrom")
+  swipesReceived Swipe[]           @relation("SwipeTo")
+  matchesAsA     Match[]           @relation("MatchPetA")
+  matchesAsB     Match[]           @relation("MatchPetB")
   posts          Post[]
   vaccines       PetVaccine[]
+  medications    PetMedication[]
+  healthRecords  PetHealthRecord[]
   lostAlerts     LostPetAlert[]
   sightings      PetSighting[]
   notifications  Notification[]
@@ -474,6 +488,8 @@ model Notification {
   eventId   String?          @map("event_id") @db.Uuid
   /// Trecho do comentário, quando houver
   preview   String           @default("") @db.VarChar(140)
+  /// Lembretes automáticos: impede avisar duas vezes a mesma coisa (ex.: remédio do dia)
+  dedupKey  String?          @unique @map("dedup_key") @db.VarChar(120)
   readAt    DateTime?        @map("read_at")
   createdAt DateTime         @default(now()) @map("created_at")
   user      User             @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
@@ -636,4 +652,41 @@ model StoreReview {
   @@index([storeId, createdAt])
   @@index([authorId])
   @@map("store_reviews")
+}
+
+/// Remédio em uso: o tutor informa a primeira dose e o intervalo; o app calcula as próximas.
+model PetMedication {
+  id          String    @id @default(uuid()) @db.Uuid
+  petId       String    @map("pet_id") @db.Uuid
+  name        String    @db.VarChar(80)
+  dosage      String    @default("") @db.VarChar(80)
+  everyHours  Int       @map("every_hours")
+  firstDoseAt DateTime  @map("first_dose_at")
+  /// Último dia do tratamento (vazio = uso contínuo)
+  endsOn      DateTime? @map("ends_on") @db.Date
+  notes       String    @default("") @db.VarChar(300)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  pet         Pet       @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId])
+  @@index([endsOn])
+  @@map("pet_medications")
+}
+
+/// Histórico de saúde: consultas, exames, cirurgias e pesagens. Privado do tutor.
+model PetHealthRecord {
+  id          String           @id @default(uuid()) @db.Uuid
+  petId       String           @map("pet_id") @db.Uuid
+  kind        HealthRecordKind
+  date        DateTime         @db.Date
+  title       String           @db.VarChar(120)
+  notes       String           @default("") @db.VarChar(1000)
+  clinic      String           @default("") @db.VarChar(120)
+  /// Peso em gramas (inteiro, sem float)
+  weightGrams Int?             @map("weight_grams")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  pet         Pet              @relation(fields: [petId], references: [id], onDelete: Cascade)
+
+  @@index([petId, date])
+  @@map("pet_health_records")
 }

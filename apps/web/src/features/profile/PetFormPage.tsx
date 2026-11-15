@@ -21,6 +21,8 @@ import { Field } from '../../components/ui/Field'
 import { PageHeader } from '../../components/ui/PageHeader'
 import { ErrorState, LoadingState } from '../../components/ui/States'
 import { api, errorMessage } from '../../lib/api'
+import { HealthHistoryCard } from './HealthHistoryCard'
+import { MedicationsCard } from './MedicationsCard'
 import { PetPhotos } from './PetPhotos'
 import { useInvalidateMyPets, useLookups } from './queries'
 import { VaccineCard } from './VaccineCard'
@@ -129,6 +131,8 @@ function PetForm({ pet, breeds: allBreeds }: { pet: Pet | undefined; breeds: Bre
       <PageHeader title={pet ? `Editar ${pet.name}` : 'Novo pet'} />
       {pet && <PetPhotos pet={pet} />}
       {pet && <VaccineCard petId={pet.id} petName={pet.name} />}
+      {pet && <MedicationsCard petId={pet.id} petName={pet.name} />}
+      {pet && <HealthHistoryCard petId={pet.id} />}
       <form onSubmit={save} noValidate className="flex flex-col gap-4">
         <Field label="Nome" error={errors.name?.message}>
           {(props) => <input {...props} {...form.register('name')} />}

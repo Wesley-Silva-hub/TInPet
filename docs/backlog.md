@@ -54,18 +54,29 @@ O cadastro público só cria `OWNER` e `COMPANY`. Para promover alguém a modera
 
 A suspensão bloqueia novo login e a renovação da sessão na hora. Um access token já emitido continua valendo até expirar (15 min).
 
-## Plano das próximas entregas (v0.3.0)
+## Plano de implementação v0.3.0 (ideias do Notion)
 
-Ordem pensada para entregar valor cedo e deixar por último o que depende de conta ou decisão de fora do time.
+Fonte: [docs/notion/documentacao.md](notion/documentacao.md), seções *Ideias de aprimoramento* e *Melhorias*. Critério: o que mais aumenta o uso diário, cabe no plano gratuito e não depende de conta externa. Cada fase entra com migration, API, tela, testes de integração e seed de demonstração.
 
-| # | Entrega | O que envolve | Depende de |
+| Fase | Entrega | O que envolve | Situação |
 |---|---|---|---|
-| 1 | **Esqueci minha senha** (item 10) | Tabela `password_reset_tokens` (hash, expira em 30 min, uso único), interface `MailProvider` (no mesmo molde do `StorageProvider`) com driver `log` em dev e `resend` em produção, rota `POST /auth/forgot` com resposta igual exista ou não o e-mail, tela `/redefinir-senha/:token`; redefinir revoga todas as sessões (reusa `logoutAll`). | Conta grátis no Resend (3 mil e-mails/mês) + `RESEND_API_KEY` no Render |
-| 2 | **Esconder contas suspensas** | Tirar pets, posts e perfis de contas suspensas do feed, do descobrir e da busca; aviso no chat de matches com a conta. | — |
-| 3 | **Lembrete de vacina** | A carteira já guarda `next_due_at`: rotina diária (mesmo padrão da limpeza de tokens) cria notificação `VACCINE_DUE` 7 dias antes. | — |
-| 4 | **Notificações push (PWA)** | Web Push com chaves VAPID; inscrição em Configurações; envia match, mensagem e pet perdido perto. | Item 3 opcional |
-| 5 | **Revisão jurídica e tag v0.1.0** (itens 8 e 9) | Termos revisados e release com notas. | Pessoa da área jurídica |
-| 6 | **Saúde do pet completa** (item 17) | Consultas, peso e anexos de exames no módulo `health`. | — |
+| 1 | **Eventos de pets na região** | Criar evento (avisa tutores a 10 km), lista por distância, "Vou!", cancelar avisando quem ia | Feito |
+| 2 | **Avaliações de lojas** | 1 a 5 estrelas + comentário, uma por tutor, média na lista e na loja | Feito |
+| 3 | **Saúde completa** | Remédios com horário e período, histórico de consultas/exames/peso, e rotina diária que **avisa** reforço de vacina (7 dias antes e no dia) e remédio do dia | Esta rodada |
+| 4 | **Hashtags** | `#tags` nas legendas viram links, página da hashtag e "tags em alta" no Início | Esta rodada |
+| 5 | **Ranking da região** | Pets mais curtidos nos últimos 30 dias num raio de 50 km | Esta rodada |
+| 6 | **Stories de 24 h** | Foto que some em 24 h, barra de stories no Início, visualizador em tela cheia; rotina apaga os vencidos e os arquivos | Esta rodada |
+
+### Depois (dependem de conta, conteúdo revisado ou decisão de produto)
+
+| Entrega | Por que esperar |
+|---|---|
+| Esqueci minha senha | Precisa de conta grátis no Resend e da `RESEND_API_KEY`. Tabela de tokens (30 min, uso único) e interface `MailProvider` como o `StorageProvider`. |
+| Notificações push (PWA) | Chaves VAPID; aproveita os lembretes da fase 3. |
+| Doenças comuns por raça | Conteúdo de saúde precisa de revisão de um veterinário antes de publicar. |
+| Dog walker | Novo papel de usuário, agenda e, depois, pagamento: decisão de modelo de negócio. |
+| Autenticação em dois fatores | TOTP pede biblioteca nova (justificar no PR) ou e-mail (depende do Resend). |
+| Esconder contas suspensas no feed | Hoje a suspensão tira o acesso; falta tirar pets e posts dela das listas. |
 
 Cada entrega segue o fluxo do CONTRIBUTING: branch curta, migration quando houver, teste de integração da regra principal e PR com CI verde.
 
