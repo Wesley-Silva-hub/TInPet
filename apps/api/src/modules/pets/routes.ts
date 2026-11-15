@@ -1,8 +1,15 @@
-import { idParamsSchema, petInputSchema, petSchema, petUpdateSchema } from '@tinpet/shared'
+import {
+  idParamsSchema,
+  petInputSchema,
+  petSchema,
+  petUpdateSchema,
+  timelineSchema,
+} from '@tinpet/shared'
 import type { FastifyPluginAsyncZod } from 'fastify-type-provider-zod'
 import { z } from 'zod'
 import { readUpload } from '../../shared/images'
 import { createPetService } from './service'
+import { createTimelineService } from './timeline'
 
 export const petRoutes: FastifyPluginAsyncZod = async (app) => {
   const service = createPetService(app.deps)
@@ -24,6 +31,13 @@ export const petRoutes: FastifyPluginAsyncZod = async (app) => {
     '/:id',
     { schema: { ...base, params: idParamsSchema, response: { 200: petSchema } } },
     (request) => service.get(request.auth, request.params.id),
+  )
+
+  const timeline = createTimelineService(app.deps)
+  app.get(
+    '/:id/timeline',
+    { schema: { ...base, params: idParamsSchema, response: { 200: timelineSchema } } },
+    (request) => timeline.timeline(request.auth, request.params.id),
   )
 
   app.patch(
