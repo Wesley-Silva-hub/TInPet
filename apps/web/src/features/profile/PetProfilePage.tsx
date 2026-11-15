@@ -20,6 +20,7 @@ import { useMe } from '../../lib/auth'
 import { petAge } from '../feed/SwipeCard'
 import { PetTagCard } from '../lostPets/PetTagCard'
 import { PostGrid } from '../social/PostGrid'
+import { BreedHealthCard } from './BreedHealthCard'
 import { PetTimeline } from './PetTimeline'
 
 /** Galeria com deslize (scroll-snap) e indicadores clicáveis. */
@@ -216,6 +217,8 @@ export function PetProfilePage() {
         </h2>
         <PostGrid petId={data.id} emptyText={`Ainda não há publicações com ${data.name}.`} />
       </section>
+
+      <BreedHealthCard pet={data} />
 
       <PetTimeline petId={data.id} petName={data.name} />
     </div>
