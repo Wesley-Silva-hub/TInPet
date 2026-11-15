@@ -19,6 +19,7 @@ import { useMe } from '../../lib/auth'
 import { LostPetsStrip } from '../lostPets/LostPetsPage'
 import { useOffers } from '../marketplace/offers'
 import { SponsoredCard } from '../marketplace/SponsoredCard'
+import { StoriesBar } from '../stories/StoriesBar'
 import { PostCard } from './PostCard'
 import { usePosts } from './queries'
 import { RankingTeaser } from './RankingPage'
@@ -47,6 +48,7 @@ export function HomePage() {
         </Link>
       </header>
 
+      <StoriesBar />
       <LostPetsStrip />
       <VaccineReminders />
       {items.length > 0 && <PetHighlights posts={items} />}

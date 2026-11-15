@@ -443,6 +443,26 @@ async function main() {
     }
   }
 
+  // Stories no ar (somem em 24 h; rode o seed de novo para renovar)
+  let storyCount = 0
+  for (const [index, owner] of owners.slice(0, 4).entries()) {
+    const authorId = userIds.get(owner.key)
+    const [asset, , petKey] = owner.posts[0] ?? []
+    if (!authorId || !asset) continue
+    await db.story.create({
+      data: {
+        authorId,
+        petId: petKey ? (petIds.get(petKey) ?? null) : null,
+        imageKey: await upload(`stories/${authorId}`, asset),
+        caption:
+          ['Bom dia, vizinhança! ☀️', 'Hora do passeio 🐾', '', 'Olha quem acordou 😴'][index] ?? '',
+        createdAt: new Date(now - (index + 1) * 3_600_000),
+        expiresAt: new Date(now + (23 - index) * 3_600_000),
+      },
+    })
+    storyCount++
+  }
+
   // Eventos de pets nos próximos dias, perto dos tutores de demonstração
   const day = 86_400_000
   const atHour = (daysAhead: number, hour: number) => {
@@ -565,7 +585,7 @@ async function main() {
   }
 
   process.stdout.write(
-    `Seed concluído: ${owners.length} tutores, ${petIds.size} pets, ${postIds.length} posts, ${articles.length} artigos, ${companies.length} lojas, ${promotionCount} ofertas no ar, ${eventCount} eventos, ${reviewCount} avaliações. Senha: tinpet123\n`,
+    `Seed concluído: ${owners.length} tutores, ${petIds.size} pets, ${postIds.length} posts, ${articles.length} artigos, ${companies.length} lojas, ${promotionCount} ofertas no ar, ${eventCount} eventos, ${reviewCount} avaliações, ${storyCount} stories. Senha: tinpet123\n`,
   )
 }
 

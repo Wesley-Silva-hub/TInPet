@@ -177,6 +177,8 @@ model User {
   eventsAttending   EventAttendee[]
   reviewsWritten    StoreReview[]         @relation("ReviewAuthor")
   reviewsReceived   StoreReview[]         @relation("ReviewStore")
+  stories           Story[]
+  storyViews        StoryView[]
 
   @@index([maritalStatusId])
   @@index([professionId])
@@ -255,6 +257,7 @@ model Pet {
   posts          Post[]
   vaccines       PetVaccine[]
   medications    PetMedication[]
+  stories        Story[]
   healthRecords  PetHealthRecord[]
   lostAlerts     LostPetAlert[]
   sightings      PetSighting[]
@@ -703,4 +706,35 @@ model PostHashtag {
   @@index([tag, createdAt])
   @@index([createdAt])
   @@map("post_hashtags")
+}
+
+/// Story: foto que some em 24 h. A rotina horária apaga os vencidos e os arquivos.
+model Story {
+  id        String      @id @default(uuid()) @db.Uuid
+  authorId  String      @map("author_id") @db.Uuid
+  petId     String?     @map("pet_id") @db.Uuid
+  imageKey  String      @map("image_key")
+  caption   String      @default("") @db.VarChar(150)
+  createdAt DateTime    @default(now()) @map("created_at")
+  expiresAt DateTime    @map("expires_at")
+  author    User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  pet       Pet?        @relation(fields: [petId], references: [id], onDelete: SetNull)
+  views     StoryView[]
+
+  @@index([expiresAt])
+  @@index([authorId, createdAt])
+  @@index([petId])
+  @@map("stories")
+}
+
+model StoryView {
+  storyId   String   @map("story_id") @db.Uuid
+  viewerId  String   @map("viewer_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  story     Story    @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  viewer    User     @relation(fields: [viewerId], references: [id], onDelete: Cascade)
+
+  @@id([storyId, viewerId])
+  @@index([viewerId])
+  @@map("story_views")
 }

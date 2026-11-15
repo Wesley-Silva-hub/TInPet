@@ -1,6 +1,7 @@
 import { buildApp } from './app'
 import { cleanupExpiredRefreshTokens } from './modules/auth/service'
 import { sendHealthReminders } from './modules/health/reminders'
+import { cleanupExpiredStories } from './modules/stories/service'
 import { loadEnv } from './shared/env'
 import { createPrisma } from './shared/prisma'
 import { createStorage } from './shared/storage/storage'
@@ -22,6 +23,7 @@ const routines = [
     run: () => cleanupExpiredRefreshTokens(db),
   },
   { name: 'lembretes de saúde', everyMs: HOUR_MS, run: () => sendHealthReminders(app.deps) },
+  { name: 'limpeza de stories', everyMs: HOUR_MS, run: () => cleanupExpiredStories(app.deps) },
 ]
 
 const timers = routines.map((routine) => {

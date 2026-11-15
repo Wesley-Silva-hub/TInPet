@@ -188,6 +188,7 @@ export function createUserService({ db, storage }: AppDeps) {
           pets: { select: { photos: { select: { storageKey: true } } } },
           products: { select: { imageKey: true } },
           posts: { select: { imageKey: true } },
+          stories: { select: { imageKey: true } },
         },
       })
       if (!user) throw notFound('Usuário')
@@ -199,6 +200,7 @@ export function createUserService({ db, storage }: AppDeps) {
         ...user.pets.flatMap((pet) => pet.photos.map((photo) => photo.storageKey)),
         ...user.products.map((product) => product.imageKey),
         ...user.posts.map((post) => post.imageKey),
+        ...user.stories.map((story) => story.imageKey),
       ].filter((key): key is string => Boolean(key))
 
       // Cascata no banco remove pets, fotos, swipes, matches, mensagens, produtos, posts e tokens

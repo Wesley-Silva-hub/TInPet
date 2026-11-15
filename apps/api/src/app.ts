@@ -32,6 +32,7 @@ import { promotionRoutes } from './modules/promotions/routes'
 import { safetyRoutes } from './modules/safety/routes'
 import { socialRoutes } from './modules/social/routes'
 import { storeRoutes } from './modules/stores/routes'
+import { storyRoutes } from './modules/stories/routes'
 import { userRoutes } from './modules/users/routes'
 import { TokenService } from './shared/auth'
 import { type AppDeps, registerAuthentication } from './shared/context'
@@ -161,6 +162,7 @@ export async function buildApp({ env, db, storage }: BuildAppOptions) {
       await api.register(publicTagRoutes)
       await api.register(moderationRoutes, { prefix: '/admin' })
       await api.register(eventRoutes, { prefix: '/events' })
+      await api.register(storyRoutes, { prefix: '/stories' })
     },
     { prefix: '/api/v1' },
   )
