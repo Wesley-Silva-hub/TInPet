@@ -17,9 +17,9 @@ jobs:
     name: Lint, tipos e build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -49,9 +49,9 @@ jobs:
       TEST_DATABASE_URL: postgresql://tinpet:tinpet@localhost:5432/tinpet_test
       DATABASE_URL: postgresql://tinpet:tinpet@localhost:5432/tinpet_test
     steps:
-      - uses: actions/checkout@v5
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v5
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
